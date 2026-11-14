@@ -1,0 +1,99 @@
+# P1 Source Provenance
+
+## Verified source dataset
+The primary source package is the USGS SIM 3464 release for the Jezero/Nili geologic map.
+
+- DOI: https://doi.org/10.3133/sim3464
+- USGS index: https://pubs.usgs.gov/sim/3464/
+- Metadata URL: https://pubs.usgs.gov/sim/3464/sim3464_metadata.txt
+- Readme URL: https://pubs.usgs.gov/sim/3464/sim3464_readme.txt
+
+## Licensing and attribution
+The USGS metadata lists access constraints as `None` and a use constraint requiring GIS software to view the data; the readme requests citation of Sun and Stack (2020), USGS SIM 3464. The inspected USGS records do not state a separate redistribution license, so preserve the official citation and do not infer additional license terms.
+
+The HiRISE PDS3 label identifies the University of Arizona producer but contains no product-specific redistribution statement. P1 uses the IRB file already tracked on `main`; the RED and stereo DTM remain in P2's workspace and are not copied or rehosted. The Mastcam-Z PDS4 label likewise has no product-specific license statement; preserve NASA/PDS attribution. Confirm current source terms for commercial or third-party reuse.
+
+## Repository and local package provenance
+The extracted map package is tracked on `main` under:
+
+- `Datasetmars/data/raw/geology/extracted/sim3464_database/sim3464_JezeroNili_FINAL/`
+
+The ten raster products and `Nili.gdb` used by P1 resolve to those repository paths. The TIFF payloads are stored with Git LFS. A comparison with the sibling extraction found all 151 tracked files in the local package; 140 are byte-identical and the other 11 differ only in LF/CRLF line endings. All mapped raster payloads and geodatabase files match. The sibling package also contains `.DS_Store` and contributor-specific ArcGIS lock files that are not committed.
+
+The original archive remains external at `..\data\raw\geology\sim3464_database.zip`; the separately hashed sibling metadata copy is at `..\data\raw\geology\extracted\sim3464_database\sim3464_JezeroNili_FINAL\Metadata\SIM3464_metadata.xml`. Neither is Git-tracked. The manifests mark them `VERIFIED_EXTERNAL`: if present, the validator checks the recorded checksum and size; if absent in a clean clone, validation proceeds against the extracted Git-tracked products. Git-tracked metadata has the same normalized text but may have different line endings.
+
+`VERIFIED` means that the manifest path resolves to a checked product in the repository or current workspace. `VERIFIED_EXTERNAL` means an external copy was checked but need not exist in every clone. `AVAILABLE_NOT_DOWNLOADED` and `PENDING_DISTRIBUTION` identify products not acquired by P1.
+
+## Fresh-clone reproduction (Windows PowerShell)
+
+Clone MarsWalk and enable Git LFS so the committed raster payloads are available. From the repository root:
+
+```powershell
+git lfs install
+git lfs pull
+python -m pip install -r requirements-p1.txt
+python scripts\validate_p1_metadata.py
+```
+
+The validator can run without the raw source ZIP because the extracted rasters and geodatabase are in Git. To reproduce and validate the original archive as well, the official [USGS SIM 3464 index](https://pubs.usgs.gov/sim/3464/) lists the [source archive](https://pubs.usgs.gov/sim/3464/sim3464_database.zip). The direct endpoint returned HTTP 200 and 349,336,873 bytes when checked on 2026-11-14. USGS does not publish an archive checksum on that index; SHA-256 `A88BD53A5573743CC4A20036C10E585106D08A433AD2F34AF269E9CEA1529F87` is a local integrity reference computed from the verified sibling-workspace copy.
+
+Run the following optional archive retrieval commands from the repository root. They avoid overwriting an existing archive or extraction:
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$geology = Join-Path (Split-Path -Parent $PWD.Path) 'data\raw\geology'
+New-Item -ItemType Directory -Force -Path $geology | Out-Null
+$archive = Join-Path $geology 'sim3464_database.zip'
+if (-not (Test-Path $archive)) {
+    curl.exe --fail --location --output $archive 'https://pubs.usgs.gov/sim/3464/sim3464_database.zip'
+    if ($LASTEXITCODE -ne 0) { throw 'USGS archive download failed' }
+}
+$expected = 'A88BD53A5573743CC4A20036C10E585106D08A433AD2F34AF269E9CEA1529F87'
+$actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash
+if ($actual -ne $expected) { throw "SIM 3464 SHA-256 mismatch: $actual" }
+$destination = Join-Path $geology 'extracted\sim3464_database'
+$package = Join-Path $destination 'sim3464_JezeroNili_FINAL'
+if (-not (Test-Path $package)) {
+    New-Item -ItemType Directory -Force -Path $destination | Out-Null
+    Expand-Archive -LiteralPath $archive -DestinationPath $destination
+}
+python scripts\validate_p1_metadata.py
+if ($LASTEXITCODE -ne 0) { throw 'P1 manifest validation failed' }
+```
+
+The validator also checks the Mastcam-Z image and label committed in this P1 branch. The current validation environment was Python 3.14.3 with Rasterio 1.5.2, pinned in `requirements-p1.txt`. A successful run checks available archive/raster checksums, sizes, readability, manifest paths, and statuses. If the archive hash differs, stop and investigate rather than replacing an existing copy.
+
+The metadata file confirms the ownership and citation:
+
+- Author(s): Vivian Z. Sun and Kathryn M. Stack
+- Year: 2020
+- Series: U.S. Geological Survey Scientific Investigations Map 3464
+- Title: Geologic map of Jezero crater and the Nili Planum region, Mars
+
+## Spatial provenance
+- Geologic map/vector boundary: 76.8°E to 77.8°E, 17.7°N to 18.7°N. Raster extents vary and are recorded separately in the inventory.
+- CRS: product-specific. The geodatabase and selected regional rasters use Mars Transverse Mercator; the source HRSC DTM is Sinusoidal; CTX stereo products are Equirectangular. See each inventory row for projection parameters and sphere radius.
+- Primary basis map: MRO CTX mosaic at approximately 6 m/pixel (the GeoTIFF pixel scale is also recorded).
+
+## Limitation recorded in source metadata
+The USGS readme states that this map was produced on a semi-controlled CTX mosaic and may carry random geolocation offsets of roughly 100–200 m relative to later Mars 2020 operational products. This uncertainty must be preserved in every downstream handoff.
+
+## P2 and team-held data findings (checked 2026-11-14)
+
+P2 PR #5 (current head `335412b`) provides the HiRISE source records and a `GIS/raw_data/` placement contract; the source details first appeared in `70d661c`. The two requested originals are not both in this P1 checkout:
+
+- RED `ESP_022680_1985_RED_A_01_ORTHO.JP2`: [official PDS file](https://hirise-pds.lpl.arizona.edu/PDS/DTM/ESP/ORB_022600_022699/ESP_022680_1985_ESP_022746_1985/ESP_022680_1985_RED_A_01_ORTHO.JP2); paired [PDS3 label](https://hirise-pds.lpl.arizona.edu/PDS/DTM/ESP/ORB_022600_022699/ESP_022680_1985_ESP_022746_1985/ESP_022680_1985_RED_A_01_ORTHO.LBL). P2 reports 518,407,009 bytes and SHA-256 `2fcbb2488242f28ae3b8e8d5c9afbe16850e01bc363eca1b52205df977d67b82`; it is local-only in P2, not accessible in the P1 workspace, and not independently verified by P1. The P2-reported label metadata gives 0.2524259537 m/pixel, planetocentric equirectangular coordinates, 77.37089912–77.50346219°E / 18.09654380–18.36864001°N, and DN-to-I/F calibration. P2 stores its label under `GIS/documentation/source_labels/`.
+- IRB `ESP_022746_1985_IRB_C_01_ORTHO.JP2`: [official PDS file](https://hirise-pds.lpl.arizona.edu/PDS/DTM/ESP/ORB_022600_022699/ESP_022680_1985_ESP_022746_1985/ESP_022746_1985_IRB_C_01_ORTHO.JP2); paired [PDS3 label](https://hirise-pds.lpl.arizona.edu/PDS/DTM/ESP/ORB_022600_022699/ESP_022680_1985_ESP_022746_1985/ESP_022746_1985_IRB_C_01_ORTHO.LBL). The image and label are tracked on `main` at `666e512` and now present in this branch. P1 independently verified the JP2 at 19,743,927 bytes and SHA-256 `FDFB9618C18240CAA1718081B3E06246400373B942DD9BCCA5F43215AE03EE80`; its label is 5,485 bytes with SHA-256 `9BCA377B5133065CE160F6676E17B3D43AABB6BE7A281A23360A354EF328BBCA`. Rasterio opened the product as 7514x15967x3 uint8 at 1.0097038146737 m/pixel in planetocentric equirectangular Mars coordinates.
+- P2's paired stereo DTM is `DTEEC_022680_1985_022746_1985_A01.IMG`, not a requested P1 image product. P2 reports 479,934,208 bytes and SHA-256 `b88dac5862f64769a1dae0ad55271952b184f4529aa09980c13a149a0a628add`; its PDS label is embedded in the IMG. It is local-only in P2 and not copied by P1.
+
+The official PDS directory was reachable on 2026-11-14 and listed both requested image filenames and their labels. P2 reports that no product-specific redistribution permission was found for the RED/DTM originals; the P1 contribution therefore does not rehost or duplicate these files. The P2 hashes and sizes are P2-reported, not P1-recomputed. Confirm redistribution terms with the archive/producer before copying.
+
+## MEDA and rover observations
+
+- MEDA's official bundle is DOI [10.17189/1522849](https://doi.org/10.17189/1522849). Saniya's current remote branch (`saniya/science-environmental-intelligence`, commit `3d1d27cd1601ea91093565b13d64f50dcd03e5c9`) contains the PDS sol-1 derived pressure product `urn:nasa:pds:mars2020_meda:data_derived_env:we__0001___________der_ps__________________p`, its CSV and detached XML label. The source is the [PDS Atmospheres CSV](https://atmos.nmsu.edu/PDS/data/PDS4/Mars2020/mars2020_meda/data_derived_env/sol_0000_0089/sol_0001/WE__0001___________DER_PS__________________P02.CSV) and [label](https://atmos.nmsu.edu/PDS/data/PDS4/Mars2020/mars2020_meda/data_derived_env/sol_0000_0089/sol_0001/WE__0001___________DER_PS__________________P02.xml). P1 independently computed CSV SHA-256 `600D8D11B26B2127BA66F90889E7BA5621A0B8B788146BF5BF72A02BE2E0A16C` (125,877 bytes) and verified the label's matching CSV MD5 `ec537dbac49f78beb648de1d12ec7333`; the XML label is 9,326 bytes with SHA-256 `BF91828374F61D9267BAF2F35B2784E50FFD44EA4B3559E023295FF075068C91`. It is one 54-minute sol-1 pressure sample (Pa), with no rover coordinates or row-level UTC; it is not the complete MEDA environmental archive. The supplied P1 requirements identify relevant MEDA observations but do not define sols/time bounds or require a mission-wide full archive; additional products therefore remain unresolved pending a project interval. P1 references but does not copy Saniya's files.
+- NASA's [Jezero delta panorama resource](https://science.nasa.gov/resource/perseverance-explores-the-jezero-crater-delta/) describes a 1,118-image Mastcam-Z aggregate from sols 466, 467, 470, 471 and 474. The page supplies no individual PDS product IDs or coordinates. The PDS image below is from sol 466, but no evidence links it to the panorama; further rover observation products remain unacquired pending product-level selection.
+- P1 acquired `ZL0_0466_0708309593_769ECM_N0260756ZCAM08486_1100LMJ01.IMG` from the official [PDS Mastcam-Z operations raw archive](https://pds-imaging.jpl.nasa.gov/volumes/mars2020.html), with its detached XML label. PDS LID: `urn:nasa:pds:mars2020_mastcamz_ops_raw:data:zl0_0466_0708309593_769ecm_n0260756zcam08486_1100lmj`. The label reports sol 466, 2022-06-12 12:47:07.279–.280 UTC, Mastcam-Z Left, raw science imaging, and a 1648x1200 one-band UnsignedByte array in DN. It includes rover-frame/pointing telemetry but no geodetic coordinates, CRS or image footprint; do not spatially join it to SIM 3464. Collection DOI: [10.17189/twxd-mb70](https://doi.org/10.17189/twxd-mb70).
+- NASA's [media-use guidance](https://www.nasa.gov/nasa-brand-center/images-and-media/) says NASA content is generally not subject to U.S. copyright and asks users to acknowledge the source. The product label has no specific license statement or third-party rights notice; cite NASA PDS/Mastcam-Z and confirm current terms for commercial or third-party use.
+- RIMFAX was conditional in the supplied P1 scope; no explicit requirement was found, so no RIMFAX product was pursued.
+
+Five HiRISE files found elsewhere under `Datasetmars/data/raw/hirise/` have different product IDs from the two requested records. They are not P1 repo assets and were not copied.

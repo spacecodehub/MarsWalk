@@ -5,3 +5,4 @@
 *.IMG binary
 *.jp2 binary
 *.JP2 binary
+data/raw/rover/mastcamz/sol0466/*.xml binary
