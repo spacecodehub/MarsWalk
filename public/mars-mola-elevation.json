@@ -1,0 +1,28 @@
+{
+  "product_id": "MEGT90N000EB.IMG",
+  "dataset_id": "MGS-M-MOLA-5-MEGDR-L3-V1.0",
+  "source_url": "https://pds-geosciences.wustl.edu/mgs/urn-nasa-pds-mgs_mola_topography_derived/meg016/",
+  "elevation_reference": "MOLA areoid; values are in meters above the areoid",
+  "input_dimensions": [
+    5760,
+    2880
+  ],
+  "output_dimensions": [
+    1440,
+    720
+  ],
+  "sample_step": 4,
+  "rendered_elevation_range_m": [
+    -8177,
+    21171
+  ],
+  "no_data_value": 0,
+  "projection": "Simple cylindrical (equirectangular), planetocentric",
+  "longitude_direction": "east-positive",
+  "display_only": true,
+  "limitations": [
+    "The rendered PNG is a visualization, not an analysis raster.",
+    "MOLA's nominal equatorial pixel scale is about 3.705 km.",
+    "Not suitable for rover-scale terrain or route-safety assessment."
+  ]
+}
