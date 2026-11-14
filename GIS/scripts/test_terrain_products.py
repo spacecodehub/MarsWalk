@@ -13,7 +13,7 @@ from build_terrain_products import (
     REPORT_PATH,
     SOURCE_DTM,
 )
-from gis_common import REPOSITORY_ROOT, SIM_ROOT
+from gis_common import PRODUCTS, REPOSITORY_ROOT, SIM_ROOT
 
 
 gdal.DontUseExceptions()
@@ -40,11 +40,25 @@ class TerrainProductTests(unittest.TestCase):
         self.assertIn("MARS 2000 DATUM", note)
         self.assertAlmostEqual(abs(source.GetGeoTransform()[1]), 1.0097038, places=5)
 
+    def test_dtm_label_provenance_points_to_embedded_label_product(self):
+        dtm = next(product for product in PRODUCTS if product["key"] == "hirise_dtm")
+        self.assertTrue(dtm["label_embedded"])
+        self.assertEqual(dtm["label_url"], dtm["url"])
+        self.assertTrue(dtm["url"].endswith(".IMG"))
+
     def test_terrain_outputs_exist_have_units_and_match_analysis_grid(self):
         analysis = gdal.Open(str(ANALYSIS_DEM_PATH), gdal.GA_ReadOnly)
         self.assertIsNotNone(analysis)
         self.assertAlmostEqual(abs(analysis.GetGeoTransform()[1]), 5.0, places=6)
-        self.assertEqual(analysis.GetRasterBand(1).GetUnitType(), "m")
+        self.assertAlmostEqual(abs(analysis.GetGeoTransform()[5]), 5.0, places=6)
+        analysis_band = analysis.GetRasterBand(1)
+        self.assertEqual(analysis_band.DataType, gdal.GDT_Float32)
+        self.assertEqual(analysis_band.GetUnitType(), "m")
+        self.assertIn("Mars 2000", analysis.GetMetadataItem("VERTICAL_REFERENCE"))
+        crs = osr.SpatialReference(wkt=analysis.GetProjectionRef())
+        self.assertEqual(crs.GetAttrValue("PROJECTION"), "Equirectangular")
+        self.assertAlmostEqual(crs.GetProjParm("central_meridian"), 77.44, places=6)
+        self.assertAlmostEqual(crs.GetProjParm("standard_parallel_1"), 15.0, places=6)
         for key, (filename, _algorithm) in OUTPUTS.items():
             path = OUTPUT_DIRECTORY / filename
             with self.subTest(product=key):
@@ -64,7 +78,9 @@ class TerrainProductTests(unittest.TestCase):
                     )
                 )
                 band = output.GetRasterBand(1)
+                self.assertEqual(band.DataType, gdal.GDT_Float32)
                 self.assertIsNotNone(band.GetNoDataValue())
+                self.assertEqual(band.GetNoDataValue(), -9999.0)
                 self.assertEqual(
                     band.GetUnitType(),
                     "degree" if key in ("slope", "aspect") else "m",
@@ -118,16 +134,9 @@ class TerrainProductTests(unittest.TestCase):
             .read_text(encoding="utf-8")
         )
         result = alignment["result"]
-        self.assertGreaterEqual(result["tie_count"], 8)
-        self.assertLessEqual(
-            abs(result["median_ctx_relative_shift_m"][0]), 40
-        )
-        self.assertGreaterEqual(
-            abs(result["median_ctx_relative_shift_m"][1]), 35
-        )
-        self.assertLessEqual(
-            abs(result["median_ctx_relative_shift_m"][1]), 80
-        )
+        self.assertEqual(result["tie_count"], 12)
+        self.assertEqual(result["median_ctx_relative_shift_m"], [-10.0, -55.0])
+        self.assertEqual(result["median_absolute_deviation_m"], [5.0, 5.0])
         self.assertIn(
             "not an absolute control-point survey",
             " ".join(alignment["limitations"]),

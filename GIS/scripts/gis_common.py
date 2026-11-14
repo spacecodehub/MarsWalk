@@ -338,7 +338,7 @@ PRODUCTS = [
         "processing_level": "Stereo DTM",
         "label": REPOSITORY_ROOT / "GIS" / "raw_data" / "DTEEC_022680_1985_022746_1985_A01.IMG",
         "label_embedded": True,
-        "label_url": HIRISE_SOURCE + "DTEEC_022680_1985_022746_1985_A01.LBL",
+        "label_url": HIRISE_SOURCE + "DTEEC_022680_1985_022746_1985_A01.IMG",
         "horizontal_units": "metres in map projection",
         "vertical_units": "metres",
         "vertical_reference": "Mars 2000 equipotential surface (from embedded PDS label)",

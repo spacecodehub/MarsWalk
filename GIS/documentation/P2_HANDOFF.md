@@ -176,6 +176,13 @@ remains a context visualization, not a rover-scale terrain layer.
   `DTEEC_022680_1985_022746_1985_A01.IMG` and
   `ESP_022680_1985_RED_A_01_ORTHO.JP2`. Place both in `GIS/raw_data/` and
   verify the checksums above (also listed in the inventory).
+- P1 PR #4 remains open and its inventory still marks the RED and IRB products
+  `AVAILABLE_NOT_DOWNLOADED`; it does not list the stereo DTM. Its generic
+  source URL and proposed `.tif` placement are not acquisition evidence. The
+  direct `.IMG` and `.JP2` URLs above return HTTP 200; the DTM label is embedded
+  in the `.IMG` (a standalone `.LBL` URL returns 404). The P2 inventory and
+  source manifest use the verified product IDs, exact source URLs, checksums,
+  and `GIS/raw_data/` placement. The raw files remain excluded from Git.
 - NASA's [media-use guidance](https://www.nasa.gov/nasa-brand-center/images-and-media/)
   says NASA content is generally not subject to U.S. copyright and asks users
   to acknowledge the source, while warning that third-party material may have
@@ -195,14 +202,36 @@ remains a context visualization, not a rover-scale terrain layer.
   listed in the inventory. The FileGDB is a directory dataset and has no
   aggregate file checksum.
 
-## Downstream integration
+## Downstream integration contract and readiness
 
-| Consumer | Use now | Do not assume |
-|---|---|---|
-| P3 backend | Read SIM 3464 FileGDB and published GeoTIFF/IMG/JP2 source layers with GDAL/OGR; use the manifest and inventory for provenance, CRS, units, and Git/LFS status. | Do not assume every LFS payload is fetched, or that ignored HiRISE products are available remotely. |
-| P4 AI / terrain risk | Use the HiRISE 5 m local slope, aspect, roughness, and analysis DEM for exploratory local terrain features. | These are not full-region or validated safety/risk surfaces; do not infer absolute position or rover accuracy. |
-| P5 frontend | Use the checked-in global MOLA map assets for global context. | MOLA does not support local route safety; regional overlays need a common, verified map CRS and explicit scale/NoData handling. |
-| Science integration | Cite SIM 3464 and the HiRISE PDS product/label URLs; keep MOLA topography distinct from the areoid and retain the HiRISE RED DN-to-I/F calibration. | SIM CTX/HRSC vertical references and the 100–200 m operational offset are unresolved. |
+The four files in `GIS/processed/hirise_terrain/` are single-band, `Float32`
+GeoTIFFs, each 1517 x 3224 cells. They share a 5 m north-up grid (origin
+easting -3955.009842 m, northing 1088362.771 m) in the source DTM's
+Mars Equirectangular CRS: local sphere radius 3394839.813 m, central longitude
+77.44°E, standard parallel 15°N. The product CRS is a custom Mars CRS, not a
+terrestrial EPSG code. See `terrain_processing.json` for full WKT and hashes.
+
+| File in `GIS/processed/hirise_terrain/` | Band 1 meaning | Units | NoData |
+|---|---|---|---:|
+| `DTEEC_022680_1985_022746_1985_A01_dem_5m.tif` | Average-resampled elevation; Mars 2000 equipotential height | m | -3.4028227e38 |
+| `DTEEC_022680_1985_022746_1985_A01_slope_deg.tif` | Horn 3x3 slope | degree | -9999 |
+| `DTEEC_022680_1985_022746_1985_A01_aspect_deg.tif` | Horn aspect, clockwise from north; flat cells NoData | degree | -9999 |
+| `DTEEC_022680_1985_022746_1985_A01_roughness_3x3_m.tif` | 3x3 max-minus-min elevation | m | -9999 |
+
+Use GDAL/OGR raster APIs: read band 1 and honor each band's NoData,
+`GetGeoTransform()`, CRS WKT, and unit. Do not combine these rasters with SIM
+DEM values unless a compatible vertical reference has been established.
+
+| Consumer | Verified repository interface and readiness |
+|---|---|
+| P4 route planning | No route-planning module or terrain-consumption interface is present in reviewed `main` or the open PRs inspected. P4 can read the local GeoTIFF contract above with GDAL, but integration is **not implemented**. The DTM and RED source inputs must first be obtained into `GIS/raw_data/`; the outputs cover only their small stereo footprint. These exploratory derivatives are not validated traversability or safety scores. |
+| P5 mapping | `src/App.jsx` currently displays `/mars-mola-elevation.png` in a 1000 x 500 global equirectangular view; the frontend package has no GeoTIFF or regional GIS layer reader. The regional outputs are therefore **not directly integrated**. P5 needs a raster-tile/map-layer service or a browser raster renderer, reprojection from the Mars local equirectangular CRS to the map's display CRS, NoData transparency, and explicit local extent/legend. Keep the 5 m native GeoTIFF as the authoritative analysis source. |
+| Science / backend | Read the GeoTIFF metadata and this handoff for values and provenance; preserve HiRISE RED's label calibration if interpreting its digital numbers. Do not treat MOLA areoid values as elevation above the areoid. |
+
+All consumers must preserve the limited footprint and NoData mask. Relative
+CTX-to-HiRISE image registration is not absolute control; the possible
+100–200 m SIM offset remains unresolved, and the products must not be used to
+claim rover-scale absolute accuracy.
 
 ## Reproduce
 
