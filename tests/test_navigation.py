@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from pyproj import CRS
 import rasterio
-from rasterio.crs import CRS
 from rasterio.transform import from_origin
 
 from a_star import MarsRoutePlanner, RouteError, SafetyConstraints
@@ -328,7 +328,8 @@ class APITests(unittest.TestCase):
         response = next(item for item in sent if item["type"] == "http.response.start")
         chunks = [item.get("body", b"") for item in sent if item["type"] == "http.response.body"]
         payload = b"".join(chunks)
-        return response["status"], json.loads(payload) if payload else None
+        content_type = dict(response.get("headers", [])).get(b"content-type", b"")
+        return response["status"], json.loads(payload) if payload and b"json" in content_type else payload or None
 
     def test_health_and_layers_endpoints(self):
         status, health = self.request("GET", "/health")
@@ -340,6 +341,19 @@ class APITests(unittest.TestCase):
         status, layers = self.request("GET", "/navigation/layers")
         self.assertEqual(status, 200)
         self.assertTrue(layers["available"])
+
+    def test_terrain_raster_endpoint_streams_the_configured_dem(self):
+        status, payload = self.request("GET", "/api/navigation/terrain/dem.tif")
+        self.assertEqual(status, 200)
+        self.assertTrue(payload.startswith(b"II*\x00") or payload.startswith(b"MM\x00*"))
+
+    def test_science_endpoint_preserves_source_location_and_heuristic_policy(self):
+        status, payload = self.request("GET", "/api/science/targets")
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["schema_version"], "1.0")
+        self.assertEqual(payload["consumer"], "p5_map_visualization")
+        self.assertEqual(payload["targets"][0]["availability"]["location"], "available")
+        self.assertIn("not a NASA standard", payload["targets"][0]["priority"]["method"])
 
     def test_route_compare_and_feasibility_endpoints(self):
         body = {"start": list(cell_xy(self.aff, 0, 0)), "destination": list(cell_xy(self.aff, 4, 4)), "mode": "safest"}

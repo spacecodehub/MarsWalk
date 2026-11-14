@@ -83,7 +83,7 @@ Run the Python suites and P1 metadata validation:
 
 ```powershell
 python -m unittest discover -s tests -p "test_*.py" -v
-python -m unittest discover -s GIS\scripts -p "test_*.py" -v
+& "C:\Program Files\QGIS <version>\bin\python-qgis-ltr.bat" -m unittest discover -s GIS\scripts -p "test_*.py"
 python scripts\validate_p1_metadata.py
 ```
 

@@ -7,12 +7,17 @@ from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from a_star import MarsRoutePlanner, RouteError, SafetyConstraints
 from compare_routes import compare_routes
 from science_adapter import P6ScienceAdapter, ScienceDataError
 from terrain_adapter import P2TerrainAdapter, TerrainDataError
+from science_engine.observations import CatalogueError, load_observations
+from science_engine.target_integration import serialize_science_targets
+from science_engine.targets import load_targets, rank_targets
 
 
 ROOT = Path(__file__).resolve().parent
@@ -147,6 +152,32 @@ def layers() -> dict[str, Any]:
     return details
 
 
+@router.get("/navigation/terrain/{layer_name}.tif")
+def terrain_raster(layer_name: Literal["dem", "slope", "aspect", "roughness"]) -> FileResponse:
+    """Serve a configured P2 raster through the same API origin as the UI."""
+    config = _terrain_configuration()
+    if "terrain_dir" in config:
+        path = P2TerrainAdapter(config["terrain_dir"]).paths()[layer_name]
+    else:
+        path = Path(config.get(f"{layer_name}_path", "")) if config.get(f"{layer_name}_path") else None
+    if path is None or not path.is_file():
+        raise HTTPException(status_code=503, detail=f"Configured terrain layer is unavailable: {layer_name}")
+    return FileResponse(path, media_type="image/tiff", filename=path.name)
+
+
+@router.get("/science/targets")
+def science_targets() -> dict[str, Any]:
+    """Return P6's versioned map payload, retaining null locations as list-only."""
+    target_path = Path(os.environ.get("MARSWALK_P6_TARGETS", DEFAULT_TARGETS))
+    observations_path = ROOT / "data" / "science" / "observations" / "observations.json"
+    try:
+        observations = load_observations(observations_path)
+        targets = rank_targets(load_targets(target_path, {row["record_id"] for row in observations}))
+        return serialize_science_targets(targets, observations, consumer="p5_map_visualization")
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=503, detail=f"P6 science catalogue is unavailable or invalid: {exc}") from exc
+
+
 @router.post("/navigation/route")
 def route(req: RouteRequest) -> dict[str, Any]:
     return _plan(_planner(req), req)
@@ -180,5 +211,19 @@ def feasibility(req: RouteRequest) -> dict[str, Any]:
 # aliases on that prefix while retaining the standalone route paths requested
 # for this service. Both prefixes call the same handlers and schemas.
 app = FastAPI(title="MarsWalk Navigation API", version="1.0.0")
+cors_origins = [
+    origin.strip()
+    for origin in os.environ.get(
+        "MARSWALK_CORS_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
+    if origin.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Accept", "Content-Type"],
+)
 app.include_router(router)
 app.include_router(router, prefix="/api")

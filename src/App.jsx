@@ -140,7 +140,7 @@ export default function App() {
     setRoute(null); setRouteError(''); setRouteLoading(true)
     try {
       const result = await jsonFetch(`${API}/api/navigation/route`, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ start, destination, mode, coordinates_crs: null }) })
-      if (!result?.feasible || !Array.isArray(result.coordinates_projected_m) || result.coordinates_projected_m.length < 2 || !result.coordinates_projected_m.every((point) => Array.isArray(point) && point.length === 2 && point.every(Number.isFinite))) throw new Error('P4 did not return a feasible route with projected map coordinates.')
+      if (!result?.feasible || !Array.isArray(result.coordinates_projected_m) || result.coordinates_projected_m.length < 1 || !result.coordinates_projected_m.every((point) => Array.isArray(point) && point.length === 2 && point.every(Number.isFinite))) throw new Error('P4 did not return a feasible route with projected map coordinates.')
       setRoute(result)
     } catch (err) { setRouteError(err.message) } finally { setRouteLoading(false) }
   }
