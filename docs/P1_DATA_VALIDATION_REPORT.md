@@ -1,7 +1,9 @@
 # P1 Data Validation Report
 
 ## Validation scope
-Validation was applied to the local SIM 3464 package and the metadata records generated in this work.
+Validation was applied to the local SIM 3464 package, the downloaded PDS rover image and label, and the metadata records generated in this work.
+
+The raw SIM package validated by this checkout resides at `..\data\raw\geology\`, outside the Git repository. The validator's sibling-data fallback resolves these files only in this workspace; a fresh clone does not contain them.
 
 ## Verified checks
 The following checks were performed on the files currently present in the repository:
@@ -38,4 +40,9 @@ Examples of captured SHA256 values:
 ## Validation limitations
 - The repo does not include independent checksum files from the original USGS archive for every raster file.
 - Local metadata is sufficient to validate file presence and internal consistency but not to certify external NASA archive completeness beyond the source package captured here.
-- HiRISE and MEDA families remain outstanding and were recorded as unavailable in the local workspace rather than as downloaded or verified assets.
+- The five HiRISE files found in the sibling workspace are different products from the requested ESP_022680/ESP_022746 pair. The available PDS label confirms `ESP_025436_1990_RED`; the embedded DTM header confirms `DTEEC_048842_1985_048908_1985_U01`; two orthophoto IDs are known from their exact filenames only because no labels were present. None was copied into the repository.
+- P2's RED/DTM hashes and sizes and main's IRB tracking state are documented as external handoff evidence, not P1-local raster validation. P1 did not download or recompute those checksums.
+- Saniya's branch contains one PDS MEDA sol-1 pressure sample with a PDS-label-reported MD5; it is not in this P1 checkout and was not rehashed by P1. It is not a complete environmental archive.
+- NASA's public Mastcam-Z panorama page identifies an aggregate and acquisition sols but does not publish per-frame product IDs or coordinates; P1 does not claim that its separately acquired image is one of those frames.
+- Acquired PDS Mastcam-Z image and XML label: the label LID matches the inventory; IMG length 2,022,096 bytes and local SHA-256 `6C679BD74D17C0748D510474C0D0ED88563589BB5DA79E06EBB9961D6F639871`; label length 79,543 bytes and SHA-256 `87547EC0E4475A01FA31FE3141CB65469DF63276BA3866530958EDF1E36DFB20`. Rasterio opened the image as 1648x1200x1 uint8 with no CRS, consistent with the label's unreferenced rover-frame data. The PDS XML label provides no published file checksum; local hashes verify the downloaded copies.
+- No RIMFAX product was acquired because the original P1 prompt makes this conditional on verifying a relevant Jezero product.

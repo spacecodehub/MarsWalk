@@ -36,7 +36,7 @@ def sha256(path: Path) -> str:
     return h.hexdigest().upper()
 
 
-def validate_raster_file(path: Path) -> list[str]:
+def validate_raster_file(path: Path, require_georeferencing: bool = True) -> list[str]:
     errors: list[str] = []
     suffix = path.suffix.lower()
     if suffix not in {'.tif', '.tiff', '.img', '.vrt'}:
@@ -50,13 +50,14 @@ def validate_raster_file(path: Path) -> list[str]:
                 errors.append(f'INVALID_RASTER_BANDS:{path}')
             if src.dtypes and not src.dtypes[0]:
                 errors.append(f'INVALID_RASTER_DTYPE:{path}')
-            if src.crs is None:
+            if require_georeferencing and src.crs is None:
                 errors.append(f'MISSING_RASTER_CRS:{path}')
             if src.res is None or any(v <= 0 for v in src.res):
                 errors.append(f'INVALID_RASTER_RESOLUTION:{path}')
-            bounds = src.bounds
-            if bounds is None or (bounds.right - bounds.left <= 0) or (bounds.top - bounds.bottom <= 0):
-                errors.append(f'INVALID_RASTER_BOUNDS:{path}')
+            if src.crs is not None:
+                bounds = src.bounds
+                if bounds is None or (bounds.right - bounds.left <= 0) or (bounds.top - bounds.bottom <= 0):
+                    errors.append(f'INVALID_RASTER_BOUNDS:{path}')
     except Exception as exc:  # pragma: no cover - exercised at runtime
         errors.append(f'UNREADABLE_RASTER:{path}:{exc}')
 
@@ -167,7 +168,11 @@ def check_manifest(path: Path) -> tuple[int, int, list[str]]:
                                 if full_path.stat().st_size != expected:
                                     errors.append(f'{path.name}:{row_index}: size_bytes mismatch for {file_path}')
                         if full_path.suffix.lower() in {'.tif', '.tiff', '.img', '.vrt'}:
-                            errors.extend(validate_raster_file(full_path))
+                            has_pds4_label = (
+                                full_path.suffix.lower() == '.img'
+                                and full_path.with_suffix('.xml').is_file()
+                            )
+                            errors.extend(validate_raster_file(full_path, not has_pds4_label))
                     elif full_path.is_dir():
                         if validation_status == 'VERIFIED' and not any(full_path.iterdir()):
                             errors.append(f'{path.name}:{row_index}: geodatabase directory is empty: {file_path}')
