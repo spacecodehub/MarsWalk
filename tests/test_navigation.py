@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from pyproj import CRS as PyprojCRS
 import rasterio
 from rasterio.crs import CRS
 from rasterio.transform import from_origin
@@ -23,6 +24,7 @@ from terrain_risk import calculate_terrain_risk
 MARS_CRS = CRS.from_proj4(
     "+proj=eqc +lat_ts=18.4663 +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +R=3396190 +units=m +no_defs"
 )
+MARS_GEODETIC_CRS = PyprojCRS.from_wkt(MARS_CRS.to_wkt()).geodetic_crs
 
 
 def write_raster(path: Path, data: np.ndarray, *, transform=None, crs=MARS_CRS, nodata=-9999.0, unit=None) -> None:
@@ -170,8 +172,8 @@ class PlannerTests(unittest.TestCase):
             planner = MarsRoutePlanner(layers, safety=SafetyConstraints(None, None))
             x, y = cell_xy(aff, 1, 1)
             from rasterio.warp import transform
-            lon, lat = transform(MARS_CRS, MARS_CRS.geodetic_crs, [x], [y])
-            self.assertEqual(planner.coordinate_to_cell(*planner.to_map_coordinates((lon[0], lat[0]), MARS_CRS.geodetic_crs.to_string())), (1, 1))
+            lon, lat = transform(MARS_CRS, MARS_GEODETIC_CRS.to_wkt(), [x], [y])
+            self.assertEqual(planner.coordinate_to_cell(*planner.to_map_coordinates((lon[0], lat[0]), MARS_GEODETIC_CRS.to_wkt())), (1, 1))
 
     def test_raster_grid_mismatch_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -224,11 +226,11 @@ class PlannerTests(unittest.TestCase):
             path = Path(tmp) / "targets.json"
             from rasterio.warp import transform
             x, y = 12.5, 12.5
-            lon, lat = transform(MARS_CRS, MARS_CRS.geodetic_crs, [x], [y])
+            lon, lat = transform(MARS_CRS, MARS_GEODETIC_CRS.to_wkt(), [x], [y])
             path.write_text(json.dumps({
                 "schema_version": "1.0", "targets": [{
                     "target_id": "mock-geolocated", "name": "Mock target", "coordinates": {"longitude_east_deg": lon[0], "latitude_deg": lat[0]},
-                    "crs": MARS_CRS.geodetic_crs.to_string(), "geological_category": "deltaic",
+                    "crs": MARS_GEODETIC_CRS.to_string(), "geological_category": "deltaic",
                     "evidence_sources": [{"url": "https://example.test/source", "supports": "TEST FIXTURE ONLY"}],
                     "priority_inputs": {"scientific_significance": 4, "evidence_strength": 4, "observation_availability": 4, "geological_diversity": 4, "investigation_value": 4},
                 }],
@@ -284,11 +286,11 @@ class APITests(unittest.TestCase):
         self.targets = root / "targets.json"
         x, y = cell_xy(self.aff, 2, 2)
         from rasterio.warp import transform
-        lon, lat = transform(MARS_CRS, MARS_CRS.geodetic_crs, [x], [y])
+        lon, lat = transform(MARS_CRS, MARS_GEODETIC_CRS.to_wkt(), [x], [y])
         self.targets.write_text(json.dumps({
             "schema_version": "1.0", "targets": [{
                 "target_id": "test-target", "name": "Test target", "coordinates": {"longitude_east_deg": lon[0], "latitude_deg": lat[0]},
-                "crs": MARS_CRS.geodetic_crs.to_string(), "geological_category": "fixture",
+                "crs": MARS_GEODETIC_CRS.to_string(), "geological_category": "fixture",
                 "evidence_sources": [{"url": "fixture", "supports": "mock only"}],
                 "priority_inputs": {"scientific_significance": 4, "evidence_strength": 4, "observation_availability": 4, "geological_diversity": 4, "investigation_value": 4},
             }],

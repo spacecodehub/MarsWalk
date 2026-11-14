@@ -13,6 +13,7 @@ dist-ssr
 *.local
 GIS/raw_data/
 .venv-p4/
+.venv-science/
 __pycache__/
 *.py[cod]
 
