@@ -24,3 +24,8 @@ __pycache__/
 *.njsproj
 *.sln
 *.sw?
+
+# Science processing environment (local only)
+.venv-science/
+__pycache__/
+*.py[cod]

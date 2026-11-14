@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "catalogue_owner": "Saniya",
+  "observations": [
+    {
+      "record_id": "NASA-SCIENCE-RESOURCE:perseverance-explores-jezero-delta",
+      "record_kind": "published_observation_aggregate",
+      "mission": "Mars 2020 Perseverance",
+      "instrument": "Mastcam-Z",
+      "sols": [466, 467, 470, 471, 474],
+      "acquisition_dates_utc": ["2022-06-12", "2022-06-13", "2022-06-16", "2022-06-17", "2022-06-20"],
+      "timestamp_utc": null,
+      "coordinates": null,
+      "crs": null,
+      "observation_type": "NASA-published panorama aggregate",
+      "source_product_ref": "NASA Science resource; 1,118 Mastcam-Z image frames assembled into a color-enhanced panorama. Individual PDS product IDs are not listed on the resource page.",
+      "source_url": "https://science.nasa.gov/resource/perseverance-explores-the-jezero-crater-delta/",
+      "scientific_category": "geologic_context_imaging",
+      "description": "NASA reports that the panorama depicts the Jezero delta, including Hogwallow Flats and Skinner Ridge, and describes layered sedimentary rocks. The panorama is a published aggregate, not a substitute for the individual PDS image products.",
+      "data_quality": "NASA-published, color-enhanced aggregate; individual frame product IDs and per-frame metadata are not represented here.",
+      "confidence": "moderate",
+      "limitations": [
+        "The NASA resource identifies the image count and acquisition sols but does not expose individual PDS product IDs or rover coordinates.",
+        "The panorama is color-enhanced; color should not be treated as raw calibrated spectral data."
+      ]
+    },
+    {
+      "record_id": "urn:nasa:pds:mars2020_meda:data_derived_env:we__0001___________der_ps__________________p",
+      "record_kind": "pds_environmental_data_product",
+      "mission": "Mars 2020 Perseverance",
+      "instrument": "MEDA Pressure Sensor",
+      "sols": [1],
+      "start_time_utc": "2021-02-19T21:35:54.970Z",
+      "stop_time_utc": "2021-02-19T22:29:54.996Z",
+      "timestamp_utc": null,
+      "coordinates": null,
+      "crs": null,
+      "observation_type": "derived environmental time series",
+      "source_product_ref": "data/science/meda/raw/WE__0001___________DER_PS__________________P02.CSV and its detached PDS4 XML label",
+      "source_dataset_id": "urn:nasa:pds:mars2020_meda:data_derived_env",
+      "source_url": "https://atmos.nmsu.edu/PDS/data/PDS4/Mars2020/mars2020_meda/data_derived_env/sol_0000_0089/sol_0001/WE__0001___________DER_PS__________________P02.CSV",
+      "scientific_category": "atmospheric_pressure",
+      "processing_level": "Derived",
+      "measurement_units": {"PRESSURE": "Pa"},
+      "description": "Perseverance MEDA pressure time series for sol 1. Row-level times are provided as SCLK, LMST and LTST; UTC bounds are product-level metadata from the detached label.",
+      "data_quality": "PDS4 label MD5 verified against the unchanged source CSV. The table has no quality-flag column; empty pressure values are retained as missing in raw and excluded from the processed output.",
+      "confidence": "moderate",
+      "confidence_rationale": "PDS product identity and checksum are verified; the pressure uncertainty values are absent from this sampled product.",
+      "limitations": [
+        "The product does not provide rover latitude/longitude or per-row UTC timestamps.",
+        "PRESSURE_UNCERTAINTY values are blank in this product; the detached label also declares an anomalous kelvin unit for that pressure-uncertainty field, so the uncertainty column is not used.",
+        "This is a historical rover-local measurement and is not a current weather report or astronaut forecast."
+      ]
+    }
+  ]
+}

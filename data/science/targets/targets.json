@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "catalogue_owner": "Saniya",
+  "ranking_method": "Saniya project heuristic v1; see docs/SCIENCE_METHODOLOGY.md. Not a NASA standard.",
+  "targets": [
+    {
+      "target_id": "jezero-western-delta",
+      "name": "Jezero western delta panorama area",
+      "coordinates": null,
+      "crs": null,
+      "geological_category": "deltaic sedimentary landform",
+      "scientific_objective": "Document sedimentary architecture and facies relationships to constrain the history of water and sediment deposition in Jezero Crater.",
+      "supporting_observation_ids": ["NASA-SCIENCE-RESOURCE:perseverance-explores-jezero-delta"],
+      "scientific_significance": "NASA describes a river-fed delta setting and layered sedimentary rocks; fine-grained delta deposits are investigation priorities because they may preserve records of past environments. This is evidence of a potentially habitable ancient environment, not evidence of life.",
+      "recommended_investigations": [
+        {
+          "question": "How do bedding geometry and grain-size changes vary across the exposed delta section?",
+          "action": "Record high-resolution images and measured stratigraphic relationships across accessible exposures; distinguish direct observations from depositional interpretations."
+        },
+        {
+          "question": "Do fine-grained and coarser beds differ in composition or alteration?",
+          "action": "Compare in-situ compositional measurements across visibly distinct beds and document the exact sample locations and instrument products."
+        },
+        {
+          "question": "Which contacts are sharp, gradational, or erosional?",
+          "action": "Map contact geometry and collect contextual imagery before sampling representative units."
+        }
+      ],
+      "evidence_sources": [
+        {
+          "url": "https://science.nasa.gov/resource/perseverance-explores-the-jezero-crater-delta/",
+          "source_type": "NASA Science panorama resource and mission science-team explanation",
+          "supports": "Mastcam-Z panorama aggregate, sols 466/467/470/471/474, named Hogwallow Flats and Skinner Ridge, layered sedimentary rocks, and NASA's interpretation of the delta environment."
+        },
+        {
+          "url": "https://pds-geosciences.wustl.edu/missions/mars2020/",
+          "source_type": "PDS Geosciences Node archive index",
+          "supports": "Authoritative archive location for Mars 2020 instrument and rover data; product-level coordinates and image IDs still need to be joined from the relevant PDS products."
+        }
+      ],
+      "confidence": "moderate",
+      "confidence_rationale": "The broad landform and layered-rock context are described by NASA from Mastcam-Z imagery, but the catalogue currently lacks individual image product IDs, registered rover coordinates, and P2 GIS layers.",
+      "limitations": [
+        "No point coordinates are published in the cited NASA resource; coordinates and CRS are deliberately null.",
+        "The catalogue record points to the NASA aggregate resource, not to all 1,118 individual PDS image products.",
+        "Astronaut recommendations are proposed field methods and are not claims that new measurements or discoveries exist.",
+        "No accessibility, terrain hazard, route distance, or route-safety judgment is included."
+      ],
+      "priority_inputs": {
+        "scientific_significance": 4,
+        "evidence_strength": 3,
+        "observation_availability": 3,
+        "geological_diversity": 3,
+        "investigation_value": 4
+      },
+      "priority_input_rationale": {
+        "scientific_significance": "4: NASA identifies the delta as a primary mission science area and explains its ancient river/lake significance.",
+        "evidence_strength": "3: direct Mastcam-Z imagery and NASA science-team interpretation support the broad context, but the raw PDS frame-level join is pending.",
+        "observation_availability": "3: one NASA-published panorama assembled from 1,118 frames is cited; individual product IDs are not in this record.",
+        "geological_diversity": "3: NASA describes layered sedimentary exposures and boulders in the panorama area; detailed mapped facies are not included here.",
+        "investigation_value": "4: stratigraphy, contacts, and composition are concrete follow-up questions tied to the described deposits."
+      }
+    }
+  ]
+}
