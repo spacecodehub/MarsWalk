@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+GIS/raw_data/
+__pycache__/
 
 # Editor directories and files
 .vscode/*
@@ -22,8 +24,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-# Python backend
+
 venv/
-__pycache__/
 *.db
 .env
+.pytest_cache/
