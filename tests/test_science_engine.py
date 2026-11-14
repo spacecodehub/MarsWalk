@@ -128,7 +128,10 @@ class ServiceTests(unittest.TestCase):
             for file in (ROOT / "data/science/meda/raw").iterdir():
                 (root / "data/science/meda/raw" / file.name).write_bytes(file.read_bytes())
             service = ScienceService(root)
-            summary = service.meda_pressure_summary()
+            summary = service.meda_pressure_summary(
+                root / "data/science/meda/raw/WE__0001___________DER_PS__________________P02.CSV",
+                root / "data/science/meda/raw/WE__0001___________DER_PS__________________P02.xml",
+            )
             self.assertEqual(len(service.list_observations()), 2)
             self.assertEqual(len(service.list_targets()), 1)
             self.assertEqual(summary["measurement"]["unit"], "Pa")

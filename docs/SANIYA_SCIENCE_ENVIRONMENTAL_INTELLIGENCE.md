@@ -13,7 +13,7 @@ P1/P2 data and P3/P4/P5 contracts were not present, and no team coordination cha
 - Reusable observation loading, duplicate and coordinate validation, lookup and instrument/sol filtering.
 - Reusable target validation, evidence-link validation, recommendations and a configurable 0–100 scientific priority heuristic separated from safety/accessibility.
 - MEDA PDS4 label parsing, checksum/row-count/schema verification, explicit quality filtering, descriptive pressure summary and historical-measurement plot.
-- A backend-neutral `ScienceService` facade for P3 to wrap after contract review.
+- A backend-neutral `ScienceService` facade for P3 to wrap after contract review; MEDA input paths are explicit arguments, with no implicit source/default/fallback.
 
 ## Data and processing
 
@@ -22,6 +22,10 @@ The raw MEDA sol-1 derived pressure CSV (125,877 bytes) and detached PDS4 XML la
 The processor excludes missing pressure, the PDS sentinel, non-finite/nonpositive pressure and missing LTST. There is no quality-flag column. All 2,330 rows passed those rules. It preserves SCLK/LMST/LTST and does not invent per-row UTC or location. The pressure-uncertainty values are blank; its PDS label unit is anomalously `kelvin`, so it is excluded. See [DATA_SOURCES.md](DATA_SOURCES.md) and [SCIENCE_METHODOLOGY.md](SCIENCE_METHODOLOGY.md).
 
 The panorama evidence comes from NASA Science, which reports a 1,118-image color-enhanced Mastcam-Z panorama acquired on sols 466, 467, 470, 471 and 474. Individual PDS product IDs and coordinates are not present in that NASA resource. The catalogue preserves this as an aggregate resource record with null coordinates, not a fabricated single-frame product.
+
+## Data-mode boundary
+
+This branch adds no application data provider, application default, fallback, or data-mode setting. The starting repository has no application code to wire. The committed runtime catalogue contains only the NASA-published panorama aggregate and the authentic NASA PDS MEDA product; no synthetic/demo records or demo datasets are included. Small synthetic rows exist only inside unit tests for invalid-data handling. The command-line sample processor explicitly names the checked-in real MEDA product, while the reusable service requires callers to pass a product CSV and matching PDS4 label. This science contribution does not claim the complete MarsWalk application uses real data.
 
 ## Data contracts and integration status
 
@@ -62,4 +66,4 @@ Executed with Python 3.10.11, Pandas 2.3.3, NumPy 2.2.6 and Matplotlib 3.10.9:
 
 ## Delivery status
 
-Local branch: `saniya/science-environmental-intelligence`; rebased onto the latest fetched `origin/main`; local commit `8593fcb`. Push was rejected by the approval gate, so the branch is not on GitHub and no PR has been opened. Proposed PR title: `Saniya | Science Intelligence and Environmental Analysis`. Do not merge without explicit approval.
+Local branch: `saniya/science-environmental-intelligence`; rebased onto the latest fetched `origin/main`. The science implementation is commit `8593fcb`; the P1/P2 wait-state documentation is `cc4ccca`. No application/demo-data configuration is included. Do not merge without explicit approval.

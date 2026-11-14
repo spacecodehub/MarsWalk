@@ -32,12 +32,12 @@ class ScienceService:
     def target(self, target_id: str) -> dict[str, Any] | None:
         return next((row for row in self.list_targets() if row["target_id"] == target_id), None)
 
-    def meda_pressure_summary(self) -> dict[str, Any]:
-        raw = self.root / "data/science/meda/raw"
-        product = raw / "WE__0001___________DER_PS__________________P02.CSV"
-        label = raw / "WE__0001___________DER_PS__________________P02.xml"
+    def meda_pressure_summary(
+        self, product_path: str | Path, label_path: str | Path
+    ) -> dict[str, Any]:
+        """Summarize an explicitly selected PDS product; no implicit data source is configured."""
         summary = process_pressure_product(
-            product, label,
+            product_path, label_path,
             self.root / "data/science/meda/processed",
             self.root / "data/science/meda/reports",
         )
