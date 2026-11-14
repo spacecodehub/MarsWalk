@@ -2,14 +2,14 @@
 
 ## Executive status
 
-**GIS source inventory and read-only validation are implemented; regional terrain
-analysis is not.** The reports describe data available in this checkout and
-whether source paths are tracked on `origin/main`. They do not imply that
-every developer has fetched Git LFS payloads or has access to local-only files.
+**Regional source validation, a reproducible QGIS project, and local HiRISE
+terrain derivatives are implemented.** The products cover only the HiRISE
+stereo footprint, not all of Jezero or SIM 3464. Absolute positional accuracy
+and the reported 100–200 m operational offset remain unresolved.
 
 Generated evidence:
 
-- [`dataset_inventory.csv`](dataset_inventory.csv): 16 registered products,
+- [`dataset_inventory.csv`](dataset_inventory.csv): 16 registered source products,
   source links, byte sizes, file checksums, local/remote state, raster metadata,
   units, and limitations.
 - [`source_manifest.csv`](source_manifest.csv): product IDs, provenance, source
@@ -19,11 +19,18 @@ Generated evidence:
 - [`vector_validation.csv`](vector_validation.csv): 13 FileGDB layer checks.
 - [`spatial_overlap.csv`](spatial_overlap.csv): approximate footprint coverage
   against the SIM 3464 study boundary.
+- [`terrain_processing.json`](terrain_processing.json): source PDS metadata,
+  processing settings, statistics, and output checksums.
+- [`alignment_assessment.json`](alignment_assessment.json): reproducible local
+  image tie-point registration and its limits.
+- [`MarsWalk_Jezero.qgz`](../projects/MarsWalk_Jezero.qgz): 24-layer QGIS
+  project with relative paths.
 
-These are reproducible read-only checks, not terrain-analysis outputs. The
-included `GIS/scripts/validate_gis.py` run opened all 15 registered raster
-products and checked all 13 FileGDB layers; no invalid geometries were reported.
-The overlap test is an approximate extent comparison only.
+The inventory and validation tables are reproducible checks, distinct from the
+terrain-analysis outputs listed below. The included
+`GIS/scripts/validate_gis.py` run opened all 15 registered raster products and
+checked all 13 FileGDB layers; no invalid geometries were reported. The
+overlap test is an approximate extent comparison only.
 
 ## Data inventory and provenance
 
@@ -70,12 +77,56 @@ Other verified scale and reference details:
   or vertical reference. The inventory and validation report preserve that
   uncertainty; no terrain derivatives were calculated from them.
 
-The project brief warns of possible 100–200 m random offsets in SIM 3464
-relative to later Mars 2020 operational products. This audit did not locate
-that quantitative statement in the packaged SIM metadata and did not measure
-the offset. Treat it as an unverified warning that must be checked against an
-authoritative rover operational reference before local navigation or
-high-precision integration.
+## Terrain products and spatial checks
+
+The source HiRISE PDS label embedded in `DTEEC_022680_1985_022746_1985_A01.IMG`
+explicitly states elevations are meters above the Mars 2000 equipotential
+surface. Its Equirectangular Mars CRS uses the product local radius
+3,394,839.813 m, center longitude 77.44°E, standard parallel 15°N, and 1.0097
+m source pixels. The values have scale 1 and offset 0. No vertical datum
+conversion was applied.
+
+The reproducible script creates four GeoTIFFs in
+`GIS/processed/hirise_terrain/`:
+
+| Output | Resolution | Units and operation |
+|---|---:|---|
+| `DTEEC_022680_1985_022746_1985_A01_dem_5m.tif` | 5 m | Source DEM resampled by GDAL Warp average from 1.0097 m. |
+| `DTEEC_022680_1985_022746_1985_A01_slope_deg.tif` | 5 m | GDAL slope, Horn 3x3, degrees, vertical/horizontal scale 1. |
+| `DTEEC_022680_1985_022746_1985_A01_aspect_deg.tif` | 5 m | GDAL aspect, Horn, clockwise degrees from north; flat-cell aspect is NoData. |
+| `DTEEC_022680_1985_022746_1985_A01_roughness_3x3_m.tif` | 5 m | GDAL Roughness, 3x3 max-minus-min elevation, metres. |
+
+All outputs share the analysis DEM's projection and grid. Source NoData is
+preserved through resampling; derivative edge computation is disabled, so the
+outer edge and unsupported neighborhoods remain NoData. Outputs use tiled,
+DEFLATE-compressed GeoTIFFs with floating-point prediction. Exact dimensions,
+CRS, file sizes, hashes, statistics, and the parsed PDS label are in
+`terrain_processing.json`.
+
+The QGIS project uses paths relative to its file and groups the SIM 3464
+geology, HiRISE terrain, imagery, and regional source DEMs. It validates with
+24 readable layers in this checkout. Its HiRISE layers require downloading the
+ignored source DTM and RED image using the instructions below.
+
+### Relative registration and unresolved accuracy
+
+The CTX mosaic and HiRISE RED orthophoto were warped to the shared HiRISE 5 m
+grid and compared using 12 spatially distributed 192x192-pixel Sobel-gradient
+tiles and normalized cross-correlation (minimum score 0.3). The median
+apparent CTX displacement relative to HiRISE is **10 m west and 55 m south**;
+the component-wise median absolute deviation is 5 m. Individual tie scores
+and shifts are preserved in `alignment_assessment.json`.
+
+This is a relative image-match estimate over one limited footprint, not an
+absolute control-point or accuracy result. The source ortho is not a Mars 2020
+operational control dataset. Therefore the reported **100–200 m random SIM
+offset relative to later operational products remains unresolved**: it was not
+found quantified in the packaged metadata, and the available local sources do
+not provide the required independent operational control points. Do not use
+this estimate for rover navigation or claim rover-scale accuracy.
+
+The aligned derivative grids and all 13 SIM vector layers are tested
+automatically. Raster overlap fractions remain extent-coverage checks only.
 
 ## Processing and spatial validation
 
@@ -87,8 +138,14 @@ Implemented:
 2. `validate_gis.py` opens the raster set, checks FileGDB layer geometry
    validity, and transforms the SIM study boundary into each raster CRS to
    estimate how much of that boundary is covered by the raster footprint.
-3. `test_gis_common.py` checks north-up and rotated affine raster corner
-   calculations.
+3. `build_terrain_products.py` verifies the embedded PDS product ID and vertical
+   reference before resampling or processing. It creates the products and
+   checks exact grid equality.
+4. `assess_relative_alignment.py` records the tiled image registration estimate
+   against the HiRISE orthophoto.
+5. The GIS tests verify source metadata, output existence/units/NoData/grid
+   alignment, all SIM feature geometries, the QGIS project, and the relative
+   registration report.
 
 The footprint fractions are approximate coverage checks. They do not validate
 pixel-to-pixel registration, elevation agreement, positional accuracy,
@@ -98,13 +155,11 @@ THEMIS mosaics; partial coverage by CTX stereo scenes and the local HiRISE
 products; and global coverage by MOLA. Those results are not evidence of
 co-registration.
 
-Not implemented: a QGIS project; regional DEM reprojection/resampling;
-NoData-normalized analysis surfaces; slope, aspect, roughness, or new hillshade
-outputs; vertical-datum reconciliation; or independent positional-accuracy
-assessment. The clipped HRSC hillshade is already present in the USGS package
-and is not an output generated by the MarsWalk scripts. The global MOLA PNG
-used by the web map is a visualization asset, not a local terrain-analysis
-layer.
+Not implemented: full-SIM-region slope/aspect/roughness coverage, DEM
+vertical-datum reconciliation for SIM CTX/HRSC rasters, or absolute
+Mars-2020-control-based positional-accuracy assessment. The clipped HRSC
+hillshade is a USGS package source, not a MarsWalk derivative. Global MOLA
+remains a context visualization, not a rover-scale terrain layer.
 
 ## Distribution and ready-to-integrate files
 
@@ -113,11 +168,26 @@ layer.
   inventory reports the remote pointer state and does not guarantee that each
   developer has fetched the corresponding LFS payload.
 - The HiRISE IRB orthophoto is tracked on `origin/main`.
-- The HiRISE DTM and RED orthophoto are present only in this machine's ignored
-  `GIS/raw_data/` directory. They are intentionally not included as ordinary
-  Git files because of their large sizes. The RED PDS label is included with
-  this handoff. Downstream users must obtain the imagery/DTM from the
-  authoritative archive or arrange an approved large-file distribution path.
+- The HiRISE DTM (479,934,208 bytes; SHA-256
+  `b88dac5862f64769a1dae0ad55271952b184f4529aa09980c13a149a0a628add`) and RED
+  orthophoto (518,407,009 bytes; SHA-256
+  `2fcbb2488242f28ae3b8e8d5c9afbe16850e01bc363eca1b52205df977d67b82`) are
+  local-only. Download them from the [official HiRISE PDS directory](https://hirise-pds.lpl.arizona.edu/PDS/DTM/ESP/ORB_022600_022699/ESP_022680_1985_ESP_022746_1985/):
+  `DTEEC_022680_1985_022746_1985_A01.IMG` and
+  `ESP_022680_1985_RED_A_01_ORTHO.JP2`. Place both in `GIS/raw_data/` and
+  verify the checksums above (also listed in the inventory).
+- NASA's [media-use guidance](https://www.nasa.gov/nasa-brand-center/images-and-media/)
+  says NASA content is generally not subject to U.S. copyright and asks users
+  to acknowledge the source, while warning that third-party material may have
+  separate rights. The PDS3 labels identify the University of Arizona
+  producer but do not state a product-specific redistribution license. Given
+  that ambiguity and the combined ~998 MB size, this contribution does not
+  rehost the two source files. The source archive remains authoritative; retain
+  its labels and cite the HiRISE PDS/University of Arizona.
+- The small generated derivatives are included as Git LFS TIFFs under the
+  repository's existing `*.tif` LFS convention. Local LFS integrity does not
+  prove remote LFS availability; the remote payload check must succeed after
+  pushing.
 - `dataset_inventory.csv`, `source_manifest.csv`, the validation CSVs, source
   label, and scripts are handoff artifacts. Their availability on the remote
   depends on publishing this feature branch; they are not yet part of `main`.
@@ -130,9 +200,9 @@ layer.
 | Consumer | Use now | Do not assume |
 |---|---|---|
 | P3 backend | Read SIM 3464 FileGDB and published GeoTIFF/IMG/JP2 source layers with GDAL/OGR; use the manifest and inventory for provenance, CRS, units, and Git/LFS status. | Do not assume every LFS payload is fetched, or that ignored HiRISE products are available remotely. |
-| P4 AI / terrain risk | Use source imagery and DEMs only after checking their labels, vertical references, resolution, coverage, and registration for the intended model. | No prepared slope/aspect/roughness or validated risk surface is supplied; do not treat pixel spacing or footprint overlap as accuracy. |
+| P4 AI / terrain risk | Use the HiRISE 5 m local slope, aspect, roughness, and analysis DEM for exploratory local terrain features. | These are not full-region or validated safety/risk surfaces; do not infer absolute position or rover accuracy. |
 | P5 frontend | Use the checked-in global MOLA map assets for global context. | MOLA does not support local route safety; regional overlays need a common, verified map CRS and explicit scale/NoData handling. |
-| Science integration | Cite SIM 3464 and the original PDS product/label URLs; keep MOLA topography distinct from the areoid and retain the HiRISE RED DN-to-I/F calibration. | Do not present uncertain DEM vertical references or the unverified 100–200 m offset as resolved facts. |
+| Science integration | Cite SIM 3464 and the HiRISE PDS product/label URLs; keep MOLA topography distinct from the areoid and retain the HiRISE RED DN-to-I/F calibration. | SIM CTX/HRSC vertical references and the 100–200 m operational offset are unresolved. |
 
 ## Reproduce
 
@@ -141,9 +211,10 @@ From the repository root, with QGIS Python/GDAL and Git available:
 ```powershell
 & "C:\Program Files\QGIS <version>\bin\python-qgis-ltr.bat" GIS\scripts\generate_inventory.py
 & "C:\Program Files\QGIS <version>\bin\python-qgis-ltr.bat" GIS\scripts\validate_gis.py
-python -m unittest discover -s GIS\scripts -p "test_*.py"
+& "C:\Program Files\QGIS <version>\bin\python-qgis-ltr.bat" GIS\scripts\build_terrain_products.py
+& "C:\Program Files\QGIS <version>\bin\python-qgis-ltr.bat" GIS\scripts\assess_relative_alignment.py
+& "C:\Program Files\QGIS <version>\bin\python-qgis-ltr.bat" -m unittest discover -s GIS\scripts -p "test_*.py"
 ```
 
-The scripts do not download data, alter source rasters, or produce terrain
-derivatives. Validation was run using QGIS 3.44.15 / GDAL 3.13.3 in the
-implementation environment.
+The scripts do not download or alter source rasters. Validation and tests were
+run using QGIS 3.44.15 / GDAL 3.13.3 in the implementation environment.
