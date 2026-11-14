@@ -14,9 +14,41 @@ The extracted package is available in the local workspace's sibling `data` direc
 - `..\data\raw\geology\extracted\sim3464_database\sim3464_JezeroNili_FINAL\`
 - The archive is `..\data\raw\geology\sim3464_database.zip`.
 
-The P1 validator resolves `../data/raw/...` against this sibling directory when present. A clean clone does not include these large scientific files; coordinate their storage/distribution separately.
+The P1 validator resolves `../data/raw/...` against this sibling directory when present. A clean clone does not include these large scientific files; the official acquisition and validation steps are documented below.
 
 In the CSV manifests, `VERIFIED` means that the file at the recorded path was checked in the available workspace; it does not mean that the file is Git-tracked. The SIM 3464 paths resolve to the sibling workspace. `AVAILABLE_NOT_DOWNLOADED` and `PENDING_DISTRIBUTION` identify external products that were not acquired by P1.
+
+## Fresh-clone reproduction (Windows PowerShell)
+
+The official [USGS SIM 3464 index](https://pubs.usgs.gov/sim/3464/) lists the [source archive](https://pubs.usgs.gov/sim/3464/sim3464_database.zip). The direct endpoint returned HTTP 200 and 349,336,873 bytes when checked on 2026-11-14. USGS does not publish an archive checksum on that index; SHA-256 `A88BD53A5573743CC4A20036C10E585106D08A433AD2F34AF269E9CEA1529F87` is the value computed from the verified sibling-workspace copy and recorded as a local integrity reference.
+
+Clone MarsWalk into a folder whose parent can contain the sibling `data` directory, then run these commands from the repository root. They avoid overwriting an existing archive or extraction:
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$geology = Join-Path (Split-Path -Parent $PWD.Path) 'data\raw\geology'
+New-Item -ItemType Directory -Force -Path $geology | Out-Null
+$archive = Join-Path $geology 'sim3464_database.zip'
+if (-not (Test-Path $archive)) {
+    curl.exe --fail --location --output $archive 'https://pubs.usgs.gov/sim/3464/sim3464_database.zip'
+    if ($LASTEXITCODE -ne 0) { throw 'USGS archive download failed' }
+}
+$expected = 'A88BD53A5573743CC4A20036C10E585106D08A433AD2F34AF269E9CEA1529F87'
+$actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash
+if ($actual -ne $expected) { throw "SIM 3464 SHA-256 mismatch: $actual" }
+$destination = Join-Path $geology 'extracted\sim3464_database'
+$package = Join-Path $destination 'sim3464_JezeroNili_FINAL'
+if (-not (Test-Path $package)) {
+    New-Item -ItemType Directory -Force -Path $destination | Out-Null
+    Expand-Archive -LiteralPath $archive -DestinationPath $destination
+}
+python -m pip install -r requirements-p1.txt
+if ($LASTEXITCODE -ne 0) { throw 'P1 Python dependency installation failed' }
+python scripts\validate_p1_metadata.py
+if ($LASTEXITCODE -ne 0) { throw 'P1 manifest validation failed' }
+```
+
+The validator also requires the small Mastcam-Z image and label committed in this P1 branch. The current validation environment was Python 3.14.3 with Rasterio 1.5.2, pinned in `requirements-p1.txt`. A successful run checks archive/raster checksums, sizes, readability, manifest paths, and statuses. If the archive hash differs, stop and investigate rather than replacing an existing copy.
 
 The metadata file confirms the ownership and citation:
 

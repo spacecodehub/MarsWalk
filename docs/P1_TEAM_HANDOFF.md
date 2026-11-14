@@ -3,7 +3,7 @@
 ## P2 (GIS processing)
 Hand off the verified SIM 3464 geologic map package and the relevant product metadata in the following folder:
 
-- data/raw/geology/extracted/sim3464_database/sim3464_JezeroNili_FINAL/
+- `..\data\raw\geology\extracted\sim3464_database\sim3464_JezeroNili_FINAL\` (sibling workspace; not Git-tracked)
 
 Relevant details:
 - CRS: Mars Transverse Mercator, Mars_2000_(Sphere)
@@ -39,7 +39,7 @@ Use the verified GIS package and metadata records for map display context. Conti
 SIM 3464 rasters are outside Git in this workspace; a clean clone needs the separate data distribution. P2's GIS handoff describes regional raster placement and display constraints; no P1 raster renderer or app integration is claimed.
 
 ## Distribution note
-No large scientific files were committed without a confirmed storage strategy. The verified SIM 3464 raw package is available in the sibling workspace folder `..\data\raw\geology\`, not in the repository or remote branch. The P1 manifests and docs and the small PDS rover image are in this branch; a clean clone needs the SIM package distributed separately. HiRISE/MEDA items remain status-labeled in the manifests and are not represented as P1-local acquisitions.
+No large scientific files were committed without a confirmed storage strategy. The verified SIM 3464 raw package is available in the sibling workspace folder `..\data\raw\geology\`, not in the repository or remote branch. The P1 manifests, docs, and small PDS rover image/label are in this branch; a clean clone can fetch SIM 3464 from USGS using the reproducible instructions in [P1_SOURCE_PROVENANCE.md](P1_SOURCE_PROVENANCE.md). HiRISE/MEDA items remain status-labeled in the manifests and are not represented as P1-local acquisitions.
 
 ## Current coordination state (checked 2026-11-14)
 - P2 PR #5 is open at head `335412b`; its handoff documents `GIS/raw_data/` placement. The RED/DTM originals are not rehosted because P2 found no product-specific redistribution license and they total about 998 MB. The IRB image/label are already on `origin/main`; consume those after base integration rather than downloading another copy.

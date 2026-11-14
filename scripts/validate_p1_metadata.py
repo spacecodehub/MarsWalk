@@ -103,7 +103,7 @@ def check_manifest(path: Path) -> tuple[int, int, list[str]]:
     if not path.exists():
         return 0, 0, [f'MISSING_MANIFEST:{path}']
 
-    with path.open('r', newline='') as f:
+    with path.open('r', newline='', encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         if reader.fieldnames is None:
             return 0, 0, [f'NO_HEADERS:{path}']

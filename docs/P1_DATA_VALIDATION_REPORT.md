@@ -2,7 +2,7 @@
 
 ## Validation scope
 
-The P1 validator checks the three CSV manifests and files reachable from this checkout. The SIM 3464 source package is resolved from the sibling workspace directory `..\data\raw\geology\`; it is not tracked by Git. A clean clone therefore needs that package distributed separately before the same local-file validation can pass.
+The P1 validator checks the three CSV manifests and files reachable from this checkout. The SIM 3464 source package is resolved from the sibling workspace directory `..\data\raw\geology\`; it is not tracked by Git. [P1_SOURCE_PROVENANCE.md](P1_SOURCE_PROVENANCE.md) documents how a fresh clone obtains the official archive, verifies its local SHA-256 reference, extracts it to the expected sibling path, installs Rasterio, and runs validation.
 
 The sol-466 Mastcam-Z PDS image and detached XML label are tracked in this P1 branch and validated locally. P2's HiRISE payloads and Saniya's MEDA sample are external references, not P1-local files; their reported checksums are not treated as P1 validation.
 
@@ -17,7 +17,7 @@ The sol-466 Mastcam-Z PDS image and detached XML label are tracked in this P1 br
 
 ## Manifest and project checks
 
-The validation command is:
+The validation environment is Python 3.10+ with `rasterio==1.5.2` from [requirements-p1.txt](../requirements-p1.txt). The validation command, run from the repository root, is:
 
 ```text
 python scripts/validate_p1_metadata.py

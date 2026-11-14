@@ -57,7 +57,7 @@ Five other HiRISE files were found outside this repository under `Datasetmars/da
 - Manifest: data/metadata/dataset_inventory.csv
 - Validation manifest: data/metadata/product_validation.csv
 
-The P1 manifest paths use `../data/raw/...` to resolve this sibling workspace data. A fresh clone will not have the raw package unless it is distributed separately.
+The P1 manifest paths use `../data/raw/...` to resolve this sibling workspace data. A fresh clone can obtain it from the official USGS archive by following the reproducible steps in [P1_SOURCE_PROVENANCE.md](P1_SOURCE_PROVENANCE.md).
 
 ## Status
 - SIM 3464 products: 10 locally validated in the sibling workspace, not tracked in Git.
