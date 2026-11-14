@@ -19,6 +19,7 @@ MANIFESTS = [
 ]
 ALLOWED_STATUSES = {
     'VERIFIED',
+    'VERIFIED_EXTERNAL',
     'DOWNLOADED_NOT_VALIDATED',
     'AVAILABLE_NOT_DOWNLOADED',
     'MISSING',
@@ -148,8 +149,18 @@ def check_manifest(path: Path) -> tuple[int, int, list[str]]:
             if file_path:
                 full_path = resolve_path(file_path)
                 missing_allowed = (
-                    acquisition_status in {'MISSING', 'AVAILABLE_NOT_DOWNLOADED', 'PENDING_DISTRIBUTION'}
-                    or validation_status in {'MISSING', 'AVAILABLE_NOT_DOWNLOADED', 'PENDING_DISTRIBUTION'}
+                    acquisition_status in {
+                        'MISSING',
+                        'AVAILABLE_NOT_DOWNLOADED',
+                        'PENDING_DISTRIBUTION',
+                        'VERIFIED_EXTERNAL',
+                    }
+                    or validation_status in {
+                        'MISSING',
+                        'AVAILABLE_NOT_DOWNLOADED',
+                        'PENDING_DISTRIBUTION',
+                        'VERIFIED_EXTERNAL',
+                    }
                 )
                 if full_path is None or not full_path.exists():
                     if not missing_allowed:
@@ -158,7 +169,7 @@ def check_manifest(path: Path) -> tuple[int, int, list[str]]:
                     if full_path.is_file():
                         if full_path.stat().st_size == 0:
                             errors.append(f'{path.name}:{row_index}: file is empty: {file_path}')
-                        if validation_status == 'VERIFIED' and checksum:
+                        if validation_status in {'VERIFIED', 'VERIFIED_EXTERNAL'} and checksum:
                             actual = sha256(full_path)
                             if actual.upper() != checksum.upper():
                                 errors.append(f'{path.name}:{row_index}: checksum mismatch for {file_path}')
@@ -183,8 +194,18 @@ def check_manifest(path: Path) -> tuple[int, int, list[str]]:
             if label_path:
                 full_path = resolve_path(label_path)
                 missing_allowed = (
-                    acquisition_status in {'MISSING', 'AVAILABLE_NOT_DOWNLOADED', 'PENDING_DISTRIBUTION'}
-                    or validation_status in {'MISSING', 'AVAILABLE_NOT_DOWNLOADED', 'PENDING_DISTRIBUTION'}
+                    acquisition_status in {
+                        'MISSING',
+                        'AVAILABLE_NOT_DOWNLOADED',
+                        'PENDING_DISTRIBUTION',
+                        'VERIFIED_EXTERNAL',
+                    }
+                    or validation_status in {
+                        'MISSING',
+                        'AVAILABLE_NOT_DOWNLOADED',
+                        'PENDING_DISTRIBUTION',
+                        'VERIFIED_EXTERNAL',
+                    }
                 )
                 if full_path is None or not full_path.exists():
                     if not missing_allowed:
