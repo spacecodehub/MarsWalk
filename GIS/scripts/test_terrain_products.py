@@ -14,6 +14,7 @@ from build_terrain_products import (
     SOURCE_DTM,
 )
 from gis_common import PRODUCTS, REPOSITORY_ROOT, SIM_ROOT
+from terrain_adapter import TerrainSampler
 
 
 gdal.DontUseExceptions()
@@ -127,6 +128,42 @@ class TerrainProductTests(unittest.TestCase):
             if not layer.isValid()
         ]
         self.assertEqual(invalid, [])
+
+    def test_reference_adapter_samples_real_terrain_bundle(self):
+        sampler = TerrainSampler()
+        easting = sampler.transform[0] + (sampler.width // 2 + 0.5) * sampler.transform[1]
+        northing = sampler.transform[3] + (sampler.height // 2 + 0.5) * sampler.transform[5]
+
+        sample = sampler.sample(easting, northing)
+
+        self.assertTrue(sample["supported"])
+        self.assertEqual(sample["pixel"], {"column": 758, "row": 1612})
+        self.assertAlmostEqual(sample["values"]["elevation_m"], -2567.01, places=2)
+        self.assertAlmostEqual(sample["values"]["slope_deg"], 9.747402, places=5)
+        self.assertAlmostEqual(sample["values"]["aspect_deg"], 147.4189, places=4)
+        self.assertAlmostEqual(sample["values"]["roughness_m"], 2.100586, places=5)
+
+    def test_reference_adapter_rejects_nodata_and_uncovered_points(self):
+        sampler = TerrainSampler()
+        transform = sampler.transform
+
+        nodata = sampler.sample(
+            transform[0] + 0.5 * transform[1],
+            transform[3] + 0.5 * transform[5],
+        )
+        outside = sampler.sample(
+            transform[0] + sampler.width * transform[1] + 1.0,
+            transform[3] + 0.5 * transform[5],
+        )
+
+        self.assertEqual(nodata, {"supported": False, "reason": "nodata"})
+        self.assertEqual(
+            outside, {"supported": False, "reason": "outside_coverage"}
+        )
+
+    def test_reference_adapter_rejects_incomplete_terrain_bundles(self):
+        with self.assertRaisesRegex(ValueError, "must contain exactly"):
+            TerrainSampler({"elevation_m": ANALYSIS_DEM_PATH})
 
     def test_relative_registration_is_reported_as_unverified_control(self):
         alignment = json.loads(

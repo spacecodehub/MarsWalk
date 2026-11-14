@@ -222,9 +222,39 @@ Use GDAL/OGR raster APIs: read band 1 and honor each band's NoData,
 `GetGeoTransform()`, CRS WKT, and unit. Do not combine these rasters with SIM
 DEM values unless a compatible vertical reference has been established.
 
+`GIS/scripts/terrain_adapter.py` is a tested reference point-sampling adapter
+for P4. From the repository root in QGIS Python:
+
+```python
+import sys
+sys.path.insert(0, "GIS/scripts")
+from terrain_adapter import TerrainSampler
+
+terrain = TerrainSampler()
+sample = terrain.sample(-162.5098420768, 1080300.2709482254)
+```
+
+Coordinates must be east-positive easting and north-positive northing in metres in
+the terrain raster's Mars Equirectangular CRS (the custom WKT above; not
+longitude/latitude or Earth EPSG coordinates). The valid example maps to
+column 758, row 1612 and returns:
+
+```json
+{"supported":true,"pixel":{"column":758,"row":1612},"values":{"elevation_m":-2567.01,"slope_deg":9.747402,"aspect_deg":147.4189,"roughness_m":2.100586}}
+```
+
+The adapter returns
+`{"supported": false, "reason": "nodata"}` for the top-left NoData cell and
+`{"supported": false, "reason": "outside_coverage"}` beyond the raster; it
+never returns terrain values for those cases. Its tests use the actual LFS
+rasters. It samples individual points only: P4 must transform coordinates to
+this Mars CRS, sample every path segment at a conservative spacing or traverse
+every touched pixel, and reject a route if any sample/cell is unsupported.
+This helper is an adapter example, not a route planner or safety validator.
+
 | Consumer | Verified repository interface and readiness |
 |---|---|
-| P4 route planning | No route-planning module or terrain-consumption interface is present in reviewed `main` or the open PRs inspected. P4 can read the local GeoTIFF contract above with GDAL, but integration is **not implemented**. The DTM and RED source inputs must first be obtained into `GIS/raw_data/`; the outputs cover only their small stereo footprint. These exploratory derivatives are not validated traversability or safety scores. |
+| P4 route planning | The available `feature/back` backend branch exposes only a simulated `/api/mission` endpoint; the open science PR also has no route planner or terrain interface. Integration is **not implemented**. Use `TerrainSampler` or the GDAL contract above as a point-sampling starting point; route feasibility must reject every unsupported/NoData point or touched cell, and all path segments need explicit coverage checks. The DTM and RED inputs must be obtained into `GIS/raw_data/` to regenerate the source-dependent products. These exploratory derivatives are not validated traversability or safety scores. |
 | P5 mapping | `src/App.jsx` currently displays `/mars-mola-elevation.png` in a 1000 x 500 global equirectangular view; the frontend package has no GeoTIFF or regional GIS layer reader. The regional outputs are therefore **not directly integrated**. P5 needs a raster-tile/map-layer service or a browser raster renderer, reprojection from the Mars local equirectangular CRS to the map's display CRS, NoData transparency, and explicit local extent/legend. Keep the 5 m native GeoTIFF as the authoritative analysis source. |
 | Science / backend | Read the GeoTIFF metadata and this handoff for values and provenance; preserve HiRISE RED's label calibration if interpreting its digital numbers. Do not treat MOLA areoid values as elevation above the areoid. |
 
