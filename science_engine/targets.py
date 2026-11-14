@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from math import floor
+from math import floor, isfinite
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -23,7 +23,11 @@ def load_targets(path: str | Path, observation_ids: set[str]) -> list[dict[str, 
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(payload, dict) or payload.get("schema_version") != "1.0":
         raise CatalogueError("Target catalogue must declare schema_version 1.0")
-    rows = payload.get("targets", [])
+    return validate_targets(payload.get("targets", []), observation_ids)
+
+
+def validate_targets(rows: Iterable[dict[str, Any]], observation_ids: set[str]) -> list[dict[str, Any]]:
+    rows = list(rows)
     seen: set[str] = set()
     for target in rows:
         target_id = target.get("target_id")
@@ -37,10 +41,32 @@ def load_targets(path: str | Path, observation_ids: set[str]) -> list[dict[str, 
             raise CatalogueError(f"Target {target_id} references unknown observations: {sorted(missing)}")
         coords = target.get("coordinates")
         if coords is not None:
-            lat, lon = coords.get("latitude_deg"), coords.get("longitude_east_deg")
-            if lat is None or lon is None or not -90 <= lat <= 90 or not 0 <= lon <= 360 or not target.get("crs"):
+            crs = target.get("crs")
+            if not isinstance(coords, dict) or not isinstance(crs, str) or not crs.strip():
                 raise CatalogueError(f"Target {target_id} has invalid coordinates or missing CRS")
+            if {"latitude_deg", "longitude_east_deg"}.issubset(coords):
+                lat, lon = coords["latitude_deg"], coords["longitude_east_deg"]
+                if (
+                    not _finite_number(lat) or not _finite_number(lon)
+                    or not -90 <= lat <= 90 or not 0 <= lon <= 360
+                ):
+                    raise CatalogueError(f"Target {target_id} has invalid geographic coordinates")
+            elif {"x", "y"}.issubset(coords):
+                if (
+                    not _finite_number(coords["x"]) or not _finite_number(coords["y"])
+                    or not isinstance(target.get("coordinate_units"), str)
+                    or not target["coordinate_units"].strip()
+                ):
+                    raise CatalogueError(f"Target {target_id} has invalid projected coordinates or units")
+            else:
+                raise CatalogueError(
+                    f"Target {target_id} coordinates must provide latitude_deg/longitude_east_deg or x/y"
+                )
     return rows
+
+
+def _finite_number(value: Any) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and isfinite(value)
 
 
 def score_target(target: dict[str, Any]) -> dict[str, Any] | None:

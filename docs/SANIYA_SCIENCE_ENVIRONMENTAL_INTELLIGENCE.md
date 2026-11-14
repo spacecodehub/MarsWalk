@@ -25,7 +25,7 @@ The panorama evidence comes from NASA Science, which reports a 1,118-image color
 
 ## Data-mode boundary
 
-This branch adds no application data provider, application default, fallback, or data-mode setting. The current Vite/React starter scaffold has no science integration to wire. The committed runtime catalogue contains only the NASA-published panorama aggregate and the authentic NASA PDS MEDA product; no synthetic/demo records or demo datasets are included. Small synthetic rows exist only inside unit tests for invalid-data handling. The command-line sample processor explicitly names the checked-in real MEDA product, while the reusable service requires callers to pass a product CSV and matching PDS4 label. This science contribution does not claim the complete MarsWalk application uses real data.
+This branch adds no application data provider, application default, fallback, or data-mode setting. The current Vite/React starter scaffold has no science integration to wire. The committed runtime catalogue contains only the NASA-published panorama aggregate and the authentic NASA PDS MEDA product; no synthetic/demo records or demo datasets are included. Synthetic test values and the clearly labeled P4/P5 coordinate fixture exist only under `tests/` and are never loaded at runtime. The command-line sample processor explicitly names the checked-in real MEDA product, while the reusable service requires callers to pass a product CSV and matching PDS4 label. This science contribution does not claim the complete MarsWalk application uses real data.
 
 ## Data contracts and integration status
 
@@ -34,6 +34,8 @@ The JSON catalogues are versioned `1.0` and form the provisional P3 handoff. Rec
 Example provisional response shapes are the files themselves: `observations.json` (`{schema_version, observations:[...]}`), `targets.json` (`{schema_version, targets:[...]}`), and the generated MEDA summary (`{product_lid, sol, measurement:{name,unit,minimum,maximum,mean,median,...}, filtered_counts, historical_measurements, time_basis}`). These are not approved REST contracts; P3 should map them to its models after review.
 
 No endpoints are proposed as final because no P3 contract was available. The `ScienceService` has methods for listing/filtering observations, fetching a record, ranking/fetching targets and producing the MEDA summary. P3 may wrap these in approved API models. P4 receives scientific priority, evidence and recommendations without route decisions. P5 may display the catalogues and summary, preserving their confidence and historical labels.
+
+The provisional P4/P5 science-target output is described in [P6_P4_P5_SCIENCE_TARGET_INTERFACE.md](P6_P4_P5_SCIENCE_TARGET_INTERFACE.md) and defined by [the versioned JSON Schema](schemas/p6_science_targets.schema.json). The service exposes separate route-planning and map-visualization methods. The only current target is the unlocated Jezero western-delta panorama area; its coordinates and CRS remain null. Science priority is advisory and cannot override P4's hard safety constraints. P4/P5 modules were not present for end-to-end integration.
 
 ## Commands
 
@@ -48,7 +50,7 @@ The processing command defaults to a cleaned CSV and summary JSON in `data/scien
 
 ## Validation and remaining integration work
 
-Automated tests cover catalogue provenance/duplicates/coordinate ranges, PDS label metadata, checksum and row-count validation, actual MEDA processing outputs, missing/sentinel/nonfinite/invalid-time handling, preservation of existing outputs, protection against raw-input path collisions, target evidence links and ranking separation, recommendations and service loading.
+Automated tests cover catalogue provenance/duplicates/coordinate ranges, projected-coordinate CRS/unit validation, PDS label metadata, checksum and row-count validation, actual MEDA processing outputs, missing/sentinel/nonfinite/invalid-time handling, preservation of existing outputs, protection against raw-input path collisions, P4/P5 payload fields and safety/display policies, explicit mock transformation behavior, target evidence links and ranking separation, recommendations and service loading.
 
 API compatibility and frontend labels cannot be validated until those modules and P3's approved contracts exist. P1 should supply the full observation set and product-to-image metadata; P2 should supply registered GIS layers and agreed CRS; P3/P4/P5 should review the provisional schema and consumer needs. The science priority score is a local heuristic and must not be used for route safety. RIMFAX is not integrated in this slice because no corresponding product or interpretation metadata was supplied for a target.
 
@@ -60,7 +62,7 @@ No provider has been activated or replaced and no application data mode exists t
 
 Executed in `.venv-science` with Python 3.10.11, Pandas 2.3.3, NumPy 2.2.6 and Matplotlib 3.10.9:
 
-- `python -m unittest discover -s tests -v` — 11 tests passed, including output-path safety cases.
+- `python -m unittest discover -s tests -v` — 15 tests passed, including output-path and P4/P5 integration cases.
 - `python scripts/process_meda.py` with temporary `--output-dir` and `--report-dir` destinations — processed 2,330 of 2,330 rows and generated the cleaned CSV, summary JSON and pressure PNG without replacing repository artifacts.
 - Raw CSV/XML hashes and observation/target catalogue hashes were unchanged by validation; pressure statistics still match the checked-in summary.
 

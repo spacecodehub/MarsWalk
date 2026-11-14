@@ -8,6 +8,7 @@ from typing import Any
 
 from .meda_processor import process_pressure_product
 from .observations import filter_observations, get_observation, load_observations
+from .target_integration import CoordinateTransform, serialize_science_targets
 from .targets import load_targets, rank_targets
 
 
@@ -31,6 +32,38 @@ class ScienceService:
 
     def target(self, target_id: str) -> dict[str, Any] | None:
         return next((row for row in self.list_targets() if row["target_id"] == target_id), None)
+
+    def targets_for_p4_route_planning(
+        self,
+        *,
+        target_crs: str | None = None,
+        target_units: str | None = None,
+        coordinate_transform: CoordinateTransform | None = None,
+    ) -> dict[str, Any]:
+        """Return science advisory targets; P4 remains responsible for route safety."""
+        return serialize_science_targets(
+            self.list_targets(), self.observations,
+            consumer="p4_route_planning",
+            target_crs=target_crs,
+            target_units=target_units,
+            coordinate_transform=coordinate_transform,
+        )
+
+    def targets_for_p5_map(
+        self,
+        *,
+        target_crs: str | None = None,
+        target_units: str | None = None,
+        coordinate_transform: CoordinateTransform | None = None,
+    ) -> dict[str, Any]:
+        """Return source-linked targets; P5 should list targets without locations."""
+        return serialize_science_targets(
+            self.list_targets(), self.observations,
+            consumer="p5_map_visualization",
+            target_crs=target_crs,
+            target_units=target_units,
+            coordinate_transform=coordinate_transform,
+        )
 
     def meda_pressure_summary(
         self,

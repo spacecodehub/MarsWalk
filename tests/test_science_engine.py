@@ -9,7 +9,8 @@ from science_engine.meda_processor import process_pressure_product, quality_filt
 from science_engine.observations import CatalogueError, filter_observations, load_observations, validate_observations
 from science_engine.recommendations import recommendations_for_target
 from science_engine.science_service import ScienceService
-from science_engine.targets import load_targets, rank_targets, score_target
+from science_engine.target_integration import serialize_science_targets
+from science_engine.targets import load_targets, rank_targets, score_target, validate_targets
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,6 +33,16 @@ class ObservationTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(CatalogueError, "coordinates"):
             validate_observations([row])
+
+    def test_projected_target_coordinates_require_finite_xy_crs_and_units(self):
+        target = {
+            "target_id": "projected-test", "coordinates": {"x": 120.5, "y": -8.0},
+            "crs": "MOCK:GRID", "coordinate_units": "m", "evidence_sources": [{}],
+        }
+        self.assertEqual(validate_targets([target], set()), [target])
+        invalid = {**target, "coordinates": {"x": float("nan"), "y": 2.0}}
+        with self.assertRaisesRegex(CatalogueError, "projected coordinates"):
+            validate_targets([invalid], set())
 
 
 class MedaTests(unittest.TestCase):
@@ -178,6 +189,102 @@ class ServiceTests(unittest.TestCase):
             self.assertEqual(len(service.list_observations()), 2)
             self.assertEqual(len(service.list_targets()), 1)
             self.assertEqual(summary["measurement"]["unit"], "Pa")
+
+
+class ScienceTargetIntegrationTests(unittest.TestCase):
+    def setUp(self):
+        self.service = ScienceService(ROOT)
+
+    def test_real_targets_have_shared_schema_and_p4_p5_policies(self):
+        p4 = self.service.targets_for_p4_route_planning()
+        p5 = self.service.targets_for_p5_map()
+        schema = json.loads(
+            (ROOT / "docs/schemas/p6_science_targets.schema.json").read_text(encoding="utf-8")
+        )
+        required = {
+            "target_id", "name", "science_category", "location", "priority_score",
+            "priority", "scientific_justification", "provenance", "data_quality", "availability",
+        }
+        self.assertEqual(p4["schema_version"], "1.0")
+        self.assertEqual(p5["schema_version"], "1.0")
+        self.assertTrue(set(schema["required"]).issubset(p4))
+        self.assertEqual(set(schema["$defs"]["target"]["required"]), required)
+        self.assertEqual(
+            set(p4["coordinate_reference"]),
+            set(schema["properties"]["coordinate_reference"]["required"]),
+        )
+        self.assertEqual(p4["consumer"], "p4_route_planning")
+        self.assertEqual(p5["consumer"], "p5_map_visualization")
+        self.assertEqual(set(p4["targets"][0]), required)
+        self.assertEqual(p4["targets"][0], p5["targets"][0])
+        target = p4["targets"][0]
+        self.assertEqual(target["target_id"], "jezero-western-delta")
+        self.assertEqual(target["priority_score"], 86.3)
+        self.assertEqual(target["priority"]["role"], "advisory_only")
+        self.assertEqual(target["priority"]["inputs"]["scientific_significance"], 4.0)
+        self.assertIn("terrain danger", target["priority"]["excludes"])
+        self.assertIsNone(target["location"])
+        self.assertEqual(target["availability"]["display_policy"], "list_only_unlocated")
+        self.assertEqual(target["data_quality"]["uncertainty"]["status"], "not_quantified")
+        for key in ("priority", "scientific_justification", "provenance", "data_quality", "availability"):
+            self.assertEqual(
+                set(target[key]),
+                set(schema["$defs"]["target"]["properties"][key]["required"]),
+            )
+        self.assertEqual(
+            target["provenance"]["supporting_observation_ids"],
+            ["NASA-SCIENCE-RESOURCE:perseverance-explores-jezero-delta"],
+        )
+        self.assertEqual(len(target["provenance"]["observations"]), 1)
+        self.assertTrue(target["provenance"]["observations"][0]["source_url"].startswith("https://science.nasa.gov/"))
+        self.assertFalse(any("MEDA" in source.get("source_type", "") for source in target["provenance"]["sources"]))
+        self.assertTrue(p4["route_planning_policy"]["hard_safety_constraints_are_mandatory"])
+        self.assertFalse(p4["route_planning_policy"]["science_priority_may_override_hard_safety_constraints"])
+        self.assertEqual(p5["map_display_policy"]["unlocated_target_display"], "list_only_unlocated")
+
+    def test_mock_fixture_exercises_explicit_coordinate_transform(self):
+        fixture = json.loads((ROOT / "tests/fixtures/mock_science_targets.json").read_text(encoding="utf-8"))
+        self.assertEqual(fixture["fixture_type"], "MOCK_ONLY_NOT_MARS_DATA")
+        calls = []
+
+        def mock_transform(x, y, source_crs, target_crs):
+            calls.append((source_crs, target_crs))
+            return x / 1000, y / 1000
+
+        payload = serialize_science_targets(
+            fixture["targets"],
+            consumer="p5_map_visualization",
+            target_crs="MOCK:ROUTE_GRID_KILOMETERS",
+            target_units="km",
+            coordinate_transform=mock_transform,
+        )
+        target = payload["targets"][0]
+        schema = json.loads(
+            (ROOT / "docs/schemas/p6_science_targets.schema.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(set(target), set(schema["$defs"]["target"]["required"]))
+        self.assertEqual(set(target["location"]), set(schema["$defs"]["location"]["required"]))
+        self.assertEqual(
+            set(target["location"]["coordinates"]),
+            set(schema["$defs"]["location"]["properties"]["coordinates"]["required"]),
+        )
+        self.assertEqual(target["location"]["coordinates"], {"x": 1.25, "y": 2.4})
+        self.assertEqual(target["location"]["crs"], "MOCK:ROUTE_GRID_KILOMETERS")
+        self.assertEqual(target["location"]["units"], "km")
+        self.assertEqual(target["location"]["transformation"]["method"], "caller_supplied_adapter")
+        self.assertEqual(calls, [("MOCK:LOCAL_METERS", "MOCK:ROUTE_GRID_KILOMETERS")])
+
+    def test_missing_coordinates_stay_missing_and_unknown_transform_is_rejected(self):
+        actual = self.service.targets_for_p5_map(
+            target_crs="P2:NOT_YET_AVAILABLE",
+            coordinate_transform=lambda *_: self.fail("must not transform an unlocated target"),
+        )
+        self.assertIsNone(actual["targets"][0]["location"])
+        fixture = json.loads((ROOT / "tests/fixtures/mock_science_targets.json").read_text(encoding="utf-8"))
+        with self.assertRaisesRegex(CatalogueError, "needs a coordinate transform"):
+            serialize_science_targets(
+                fixture["targets"], consumer="p4_route_planning", target_crs="MOCK:OTHER_GRID"
+            )
 
 
 if __name__ == "__main__":
