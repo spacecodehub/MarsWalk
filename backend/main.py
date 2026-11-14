@@ -1,3 +1,4 @@
+from navigation.api import router as navigation_router
 import os
 from contextlib import asynccontextmanager
 
@@ -43,3 +44,4 @@ app.add_middleware(
 )
 
 app.include_router(mission.router)
+app.include_router(navigation_router, prefix="/api")

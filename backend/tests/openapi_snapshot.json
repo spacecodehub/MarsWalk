@@ -1,0 +1,419 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "MarsWalk API",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/api/mission": {
+            "get": {
+                "tags": [
+                    "mission"
+                ],
+                "summary": "Get Mission",
+                "operationId": "get_mission_api_mission_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MissionOut"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/health": {
+            "get": {
+                "tags": [
+                    "navigation"
+                ],
+                "summary": "Health",
+                "operationId": "health_api_health_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": true,
+                                    "type": "object",
+                                    "title": "Response Health Api Health Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/navigation/layers": {
+            "get": {
+                "tags": [
+                    "navigation"
+                ],
+                "summary": "Layers",
+                "operationId": "layers_api_navigation_layers_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": true,
+                                    "type": "object",
+                                    "title": "Response Layers Api Navigation Layers Get"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/navigation/route": {
+            "post": {
+                "tags": [
+                    "navigation"
+                ],
+                "summary": "Route",
+                "operationId": "route_api_navigation_route_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RouteRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": true,
+                                    "type": "object",
+                                    "title": "Response Route Api Navigation Route Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/navigation/compare": {
+            "post": {
+                "tags": [
+                    "navigation"
+                ],
+                "summary": "Compare",
+                "operationId": "compare_api_navigation_compare_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RouteRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": true,
+                                    "type": "object",
+                                    "title": "Response Compare Api Navigation Compare Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/navigation/feasibility": {
+            "post": {
+                "tags": [
+                    "navigation"
+                ],
+                "summary": "Feasibility",
+                "operationId": "feasibility_api_navigation_feasibility_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RouteRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": true,
+                                    "type": "object",
+                                    "title": "Response Feasibility Api Navigation Feasibility Post"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "MissionOut": {
+                "properties": {
+                    "mission": {
+                        "type": "string",
+                        "title": "Mission"
+                    },
+                    "location": {
+                        "type": "string",
+                        "title": "Location"
+                    },
+                    "objective": {
+                        "type": "string",
+                        "title": "Objective"
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "mission",
+                    "location",
+                    "objective",
+                    "status"
+                ],
+                "title": "MissionOut"
+            },
+            "RouteRequest": {
+                "properties": {
+                    "start": {
+                        "items": {
+                            "type": "number"
+                        },
+                        "type": "array",
+                        "maxItems": 2,
+                        "minItems": 2,
+                        "title": "Start"
+                    },
+                    "destination": {
+                        "items": {
+                            "type": "number"
+                        },
+                        "type": "array",
+                        "maxItems": 2,
+                        "minItems": 2,
+                        "title": "Destination"
+                    },
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "shortest",
+                            "safest",
+                            "science-aware"
+                        ],
+                        "title": "Mode",
+                        "default": "safest"
+                    },
+                    "coordinates_crs": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Coordinates Crs"
+                    },
+                    "safety": {
+                        "$ref": "#/components/schemas/SafetyRequest"
+                    },
+                    "hazard_geojson": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Hazard Geojson"
+                    },
+                    "hazard_crs": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Hazard Crs"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "start",
+                    "destination"
+                ],
+                "title": "RouteRequest"
+            },
+            "SafetyRequest": {
+                "properties": {
+                    "max_slope_deg": {
+                        "anyOf": [
+                            {
+                                "type": "number",
+                                "minimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Max Slope Deg",
+                        "default": 25.0
+                    },
+                    "max_roughness_m": {
+                        "anyOf": [
+                            {
+                                "type": "number",
+                                "minimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Max Roughness M",
+                        "default": 10.0
+                    },
+                    "min_elevation_m": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Min Elevation M"
+                    },
+                    "max_elevation_m": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Max Elevation M"
+                    }
+                },
+                "type": "object",
+                "title": "SafetyRequest"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    },
+                    "input": {
+                        "title": "Input"
+                    },
+                    "ctx": {
+                        "type": "object",
+                        "title": "Context"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        }
+    }
+}
