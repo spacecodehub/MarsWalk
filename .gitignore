@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 GIS/raw_data/
+.venv-p4/
+__pycache__/
+*.py[cod]
 
 # Editor directories and files
 .vscode/*
