@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from a_star import MarsRoutePlanner, RouteError, SafetyConstraints
@@ -18,7 +18,7 @@ from terrain_adapter import P2TerrainAdapter, TerrainDataError
 ROOT = Path(__file__).resolve().parent
 DEFAULT_TERRAIN_DIR = ROOT / "GIS" / "processed" / "hirise_terrain"
 DEFAULT_TARGETS = ROOT / "data" / "science" / "targets" / "targets.json"
-app = FastAPI(title="MarsWalk Navigation API", version="1.0.0")
+router = APIRouter(tags=["navigation"])
 
 
 class SafetyRequest(BaseModel):
@@ -113,7 +113,7 @@ def _plan(planner: MarsRoutePlanner, req: RouteRequest) -> dict[str, Any]:
         raise HTTPException(status_code=status, detail=str(exc)) from exc
 
 
-@app.get("/health")
+@router.get("/health")
 def health() -> dict[str, Any]:
     config = _terrain_configuration()
     if "terrain_dir" in config:
@@ -124,7 +124,7 @@ def health() -> dict[str, Any]:
     return {"status": "ok", "terrain_available": available, "science_catalogue_available": targets.is_file()}
 
 
-@app.get("/navigation/layers")
+@router.get("/navigation/layers")
 def layers() -> dict[str, Any]:
     config = _terrain_configuration()
     if "terrain_dir" in config:
@@ -147,21 +147,18 @@ def layers() -> dict[str, Any]:
     return details
 
 
-@app.post("/navigation/route")
+@router.post("/navigation/route")
 def route(req: RouteRequest) -> dict[str, Any]:
     return _plan(_planner(req), req)
 
 
-@app.post("/navigation/compare")
+@router.post("/navigation/compare")
 def compare(req: RouteRequest) -> dict[str, Any]:
     planner = _planner(req)
-    result = compare_routes(planner, req.start, req.destination, input_crs=req.coordinates_crs)
-    if req.mode == "science-aware" and "science-aware" in result["routes"]:
-        pass  # ``mode`` is ignored by comparison; the same constraints apply to every mode.
-    return result
+    return compare_routes(planner, req.start, req.destination, input_crs=req.coordinates_crs)
 
 
-@app.post("/navigation/feasibility")
+@router.post("/navigation/feasibility")
 def feasibility(req: RouteRequest) -> dict[str, Any]:
     planner = _planner(req)
     try:
@@ -177,3 +174,11 @@ def feasibility(req: RouteRequest) -> dict[str, Any]:
         }
     except RouteError as exc:
         return {"feasible": False, "reason": str(exc), "excluded_cells": planner.excluded_counts}
+
+
+# The P5/backend branch currently places FastAPI resources below /api. Expose
+# aliases on that prefix while retaining the standalone route paths requested
+# for this service. Both prefixes call the same handlers and schemas.
+app = FastAPI(title="MarsWalk Navigation API", version="1.0.0")
+app.include_router(router)
+app.include_router(router, prefix="/api")

@@ -143,6 +143,14 @@ class PlannerTests(unittest.TestCase):
             with self.assertRaisesRegex(RouteError, "no located"):
                 planner.find_path(cell_xy(aff, 0, 0), cell_xy(aff, 4, 4), "science-aware")
 
+    def test_science_legacy_mode_alias(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            layers, aff = make_layers(Path(tmp))
+            target = _science_target("target", *cell_xy(aff, 2, 2), priority=80)
+            planner = MarsRoutePlanner(layers, safety=SafetyConstraints(None, None), science_targets=[target])
+            start, goal = cell_xy(aff, 0, 0), cell_xy(aff, 4, 4)
+            self.assertEqual(planner.find_path(start, goal, "science"), planner.find_path(start, goal, "science-aware"))
+
     def test_geojson_coordinates_are_mars_longitude_then_latitude(self):
         with tempfile.TemporaryDirectory() as tmp:
             layers, aff = make_layers(Path(tmp))
@@ -326,6 +334,9 @@ class APITests(unittest.TestCase):
         status, health = self.request("GET", "/health")
         self.assertEqual(status, 200)
         self.assertTrue(health["terrain_available"])
+        api_status, api_health = self.request("GET", "/api/health")
+        self.assertEqual(api_status, 200)
+        self.assertEqual(api_health, health)
         status, layers = self.request("GET", "/navigation/layers")
         self.assertEqual(status, 200)
         self.assertTrue(layers["available"])
@@ -336,6 +347,11 @@ class APITests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertTrue(result["feasible"])
         self.assertEqual(result["mode"], "safest")
+        self.assertIn("explanation", result)
+        self.assertIn("aspect_deg", result)
+        api_status, api_result = self.request("POST", "/api/navigation/route", body)
+        self.assertEqual(api_status, 200)
+        self.assertEqual(api_result["mode"], result["mode"])
         status, comparison = self.request("POST", "/navigation/compare", body)
         self.assertEqual(status, 200)
         self.assertEqual(set(comparison["routes"]), {"shortest", "safest", "science-aware"})
@@ -347,6 +363,34 @@ class APITests(unittest.TestCase):
         status, error = self.request("POST", "/navigation/route", {"start": [1], "destination": [2, 3]})
         self.assertEqual(status, 422)
         self.assertIn("detail", error)
+
+
+class ExternalDataIntegrationTests(unittest.TestCase):
+    @unittest.skipUnless(os.environ.get("MARSWALK_P2_TERRAIN_DIR"), "Set MARSWALK_P2_TERRAIN_DIR to the P2 branch raster bundle")
+    def test_p2_adapter_and_route_with_actual_branch_rasters(self):
+        from terrain_adapter import P2TerrainAdapter
+        adapter = P2TerrainAdapter(os.environ["MARSWALK_P2_TERRAIN_DIR"])
+        layers = adapter.load()
+        self.assertEqual(layers.dem.shape, (3224, 1517))
+        planner = MarsRoutePlanner(layers)
+        pairs = np.argwhere(planner.valid[:, 1:] & planner.valid[:, :-1])
+        self.assertGreater(len(pairs), 0)
+        row, col = map(int, pairs[len(pairs) // 2])
+        start, goal = cell_xy(layers.transform, row, col), cell_xy(layers.transform, row, col + 1)
+        result = planner.plan(start, goal, "shortest")
+        self.assertTrue(result["feasible"])
+        self.assertAlmostEqual(result["distance_m"], 5.0)
+        self.assertIn("aspect_deg", result)
+        self.assertLessEqual(result["slope_deg"]["maximum"], 25.0)
+        self.assertLessEqual(result["roughness_m"]["maximum"], 10.0)
+
+    @unittest.skipUnless(os.environ.get("MARSWALK_P6_TARGETS"), "Set MARSWALK_P6_TARGETS to the P6 branch catalogue")
+    def test_p6_adapter_reports_actual_unlocated_target_without_reward(self):
+        targets, unlocated = P6ScienceAdapter(os.environ["MARSWALK_P6_TARGETS"]).load(MARS_CRS)
+        self.assertEqual(targets, [])
+        self.assertEqual(len(unlocated), 1)
+        self.assertEqual(unlocated[0]["target_id"], "jezero-western-delta")
+        self.assertIn("no coordinates or CRS", unlocated[0]["reason"])
 
 
 if __name__ == "__main__":

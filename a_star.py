@@ -270,12 +270,33 @@ class MarsRoutePlanner:
         slopes = self.layers.slope[rows, cols]
         roughness = self.layers.roughness[rows, cols]
         elevation = self.layers.dem[rows, cols]
+        aspect_metrics = {"mean_degrees_clockwise_from_north": None, "valid_cells": 0}
+        if self.layers.aspect is not None:
+            aspects = self.layers.aspect[rows, cols]
+            aspect_meta = self.layers.metadata.get("aspect")
+            aspect_valid = np.isfinite(aspects)
+            if aspect_meta is not None and aspect_meta.nodata is not None:
+                aspect_valid &= aspects != float(aspect_meta.nodata)
+            if np.any(aspect_valid):
+                radians = np.deg2rad(np.mod(aspects[aspect_valid], 360.0))
+                mean_angle = math.degrees(math.atan2(float(np.mean(np.sin(radians))), float(np.mean(np.cos(radians))))) % 360.0
+                aspect_metrics = {
+                    "mean_degrees_clockwise_from_north": float(mean_angle),
+                    "valid_cells": int(np.count_nonzero(aspect_valid)),
+                }
+        explanations = {
+            "shortest": "Minimum-distance path over cells satisfying all configured hard constraints.",
+            "safest": "Minimum experimental terrain-cost path over cells satisfying all configured hard constraints.",
+            "science-aware": "Risk-weighted path with a bounded evidence-backed science preference; science does not change hard constraints.",
+        }
         return {
             "mode": mode, "feasible": True, "distance_m": float(distance),
+            "explanation": explanations[mode],
             "average_risk": float(np.mean(risks)), "maximum_risk": float(np.max(risks)),
             "elevation_m": {"minimum": float(np.min(elevation)), "maximum": float(np.max(elevation)), "mean": float(np.mean(elevation))},
             "slope_deg": {"maximum": float(np.max(slopes)), "mean": float(np.mean(slopes))},
             "roughness_m": {"maximum": float(np.max(roughness)), "mean": float(np.mean(roughness))},
+            "aspect_deg": aspect_metrics,
             "cells": len(path), "coordinates_projected_m": projected,
             "geometry": {"type": "LineString", "coordinates": geometry},
             "scientific_contribution": target_contributions(

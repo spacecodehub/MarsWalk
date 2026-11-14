@@ -4,12 +4,17 @@
 
 P4 adds a raster-backed route planner and FastAPI service. The repository's
 `main` branch currently has no route API. P2 outputs are defined by open PR
-[#5](https://github.com/spacecodehub/MarsWalk/pull/5), head commit
-`70d661c9415fa7891a616eca0ecf89c054468e8d`; the PR is not merged. This branch
-therefore provides a checked adapter for those documented files, but it does
-not claim that the real P2 products are installed in this checkout. The
-adapter's file-layout and metadata tests use small synthetic fixtures, not
-P2 raster pixels.
+[#5](https://github.com/spacecodehub/MarsWalk/pull/5), current head
+`335412bdbf1bc02b244aef24a3d5b04e963968b2`; the PR is not merged. That PR now
+includes `GIS/scripts/terrain_adapter.py`, a GDAL point sampler that validates
+the bundle and rejects NoData/out-of-coverage points. A* needs access to the
+full grid, so this branch's P2 adapter loads the same four documented rasters
+as arrays and applies the P2 metadata checks before route search. It does not
+copy or depend on files from the unmerged branch.
+
+The real P2 GeoTIFFs were read from a temporary sparse worktree at the P2 PR
+head for validation; they were not added to the P4 branch. The normal fixture
+tests remain useful for fast repeatable unit coverage.
 
 P6 is open PR [#3](https://github.com/spacecodehub/MarsWalk/pull/3), head
 `b6a4f292f3063697877f39f723b51478261de8a5`; it is also not merged. Its actual
@@ -18,11 +23,16 @@ catalogued Jezero delta target has `coordinates: null` and `crs: null`, so it
 is reported as unlocated and contributes no route reward. Science-aware
 routing becomes available only when an evidence-backed, georeferenced target
 is supplied. Tests use an explicitly synthetic target only to exercise the
-scoring path.
+scoring path. The actual P6 catalogue was also read from its open PR branch;
+the adapter returned zero located targets and preserved the target's NASA
+source provenance, as expected.
 
-The current `main` React app is the global MOLA atlas. The P2 PR's updated P5
-atlas still has no navigation API client or local GeoTIFF reader. P4 does not
-replace that UI. The API contract below is ready for a later frontend client.
+The current React app is the global MOLA atlas and has no navigation API
+client or local GeoTIFF reader. The separate `feature/back` branch has a
+FastAPI app with CORS and `/api/mission`; P4's router is exposed at both the
+requested root paths and `/api/navigation` aliases. P5 can mount the same
+`router` in its existing app with `app.include_router(router, prefix="/api")`.
+P4 does not replace the UI or backend lifespan.
 
 ## Architecture and workflow
 
@@ -176,6 +186,9 @@ Returns service and data availability:
 {"status":"ok","terrain_available":false,"science_catalogue_available":false}
 ```
 
+The same handlers are available under `/api` for the current backend prefix,
+including `/api/health` and `/api/navigation/route`.
+
 ### `GET /navigation/layers`
 
 Returns layer paths, dimensions, CRS WKT, transform, bounds, resolution,
@@ -210,7 +223,8 @@ coordinates use `hazard_crs` or default to the raster CRS.
 
 Success returns `feasible`, selected `mode`, distance, average/maximum
 relative risk, elevation/slope/roughness summaries, excluded-cell counts,
-projected metre vertices, a Mars-coordinate GeoJSON feature collection, and
+`aspect_deg` summary (circular mean over non-NoData route cells), projected metre
+vertices, a Mars-coordinate GeoJSON feature collection, and
 `scientific_contribution` for science-aware routes. Invalid requests return
 422; unavailable data return 503; unsafe or infeasible routes return a clear
 4xx response. The API never returns an unsafe fallback.
@@ -229,8 +243,13 @@ cell count, excluded-cell reasons, or a human-readable failure reason.
 
 ## Frontend integration
 
-The existing frontend has no navigation API expectation yet. When P5 adds a
-client, send Mars projected coordinates in the P2 CRS (or explicitly provide
+The current frontend has no navigation API client. The separate
+`feature/back` FastAPI app serves `/api/mission`; mount the exported P4
+`router` with `app.include_router(router, prefix="/api")` to add
+`/api/navigation/*` while retaining its CORS middleware, database lifespan,
+and existing mission route. The standalone `api:app` exposes both root
+`/navigation/*` and `/api/navigation/*` paths. Send Mars projected coordinates
+in the P2 CRS (or explicitly provide
 `coordinates_crs`), and render route GeoJSON after interpreting its Mars
 longitude/latitude coordinate convention. Use `/navigation/layers` to show
 active layer metadata and valid extent. Provide controls for all three modes
@@ -249,12 +268,20 @@ Run the deterministic backend suite:
 python -m unittest discover -s tests -v
 ```
 
+To run the two real-data integration tests, set
+`MARSWALK_P2_TERRAIN_DIR` to the P2 branch's processed GeoTIFF directory and
+`MARSWALK_P6_TARGETS` to the P6 branch's `data/science/targets/targets.json`,
+then rerun the same command.
+
 The tests cover path optimality/reproducibility, diagonal corner blocking,
 all objectives sharing safety masks, slope/roughness/hazards/elevation,
 NoData, unsafe endpoints, infeasibility, coordinate transforms, GeoJSON
 ordering, raster alignment, P2 adapter shape, P6 schema and science scoring,
 and all five API endpoints including validation errors. P2/P6 test data are
-synthetic adapter fixtures, not merged project products.
+synthetic adapter fixtures, not merged project products. Two optional
+integration tests can use actual open-PR data when
+`MARSWALK_P2_TERRAIN_DIR` and `MARSWALK_P6_TARGETS` point to their checkout
+paths. Without those variables, the actual-data tests are skipped.
 
 Frontend checks (no frontend implementation is changed by P4):
 
@@ -265,7 +292,10 @@ npm.cmd run build
 
 Executed in this checkout on 2026-11-14:
 
-- `python -B -m unittest discover -s tests -v`: **19 tests passed**.
+- `python -B -m unittest discover -s tests -v`: **20 passed, 2 actual-data tests skipped** when open PR paths are not configured.
+- Same suite with `MARSWALK_P2_TERRAIN_DIR` and `MARSWALK_P6_TARGETS` set to the temporary sparse worktrees: **22 passed**, including real P2 routing and actual P6 catalogue handling.
+- Actual P2 smoke check at open PR #5 head `335412b`: adapter loaded the 1517x3224 grid, found 3,507,080 common valid cells, and planned a 5 m route over adjacent safe cells (maximum slope 7.4417 degrees; maximum roughness 1.6284 m).
+- Actual P6 smoke check at open PR #3 head `b6a4f29`: zero located targets; `jezero-western-delta` was retained as unlocated because coordinates and CRS are null.
 - `npm.cmd run lint`: **passed** (`eslint .`, exit code 0).
 - `npm.cmd run build`: **passed** (Vite 8.3.8, 20 modules transformed).
 - No Python type-checker or Python lint configuration is present in the
@@ -278,9 +308,10 @@ Experimental route scoring is not NASA-certified rover safety validation.
 - This experimental planner is not flight software or a NASA-certified
   safety model. Human review and mission-specific safety requirements are
   required before operational use.
-- Real P2 outputs and P6 catalogue are on separate open PR branches. This
-  branch only provides adapters and synthetic tests unless those PRs merge
-  before integration.
+- Real P2 outputs and the P6 catalogue remain on separate open PR branches.
+  They passed the temporary real-data integration checks above, but are not
+  bundled in the P4 branch. A deployment needs those raster files and the P6
+  JSON present at the configured paths.
 - P2's 100–200 m possible SIM offset remains unverified; 10 m west / 55 m
   south is relative alignment only.
 - P2's local HiRISE footprint is small; no route is extrapolated through
