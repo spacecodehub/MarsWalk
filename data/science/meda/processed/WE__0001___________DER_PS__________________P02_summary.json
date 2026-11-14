@@ -1,0 +1,37 @@
+{
+  "dataset": "Mars 2020 MEDA Pressure Sensor Derived Data",
+  "product_lid": "urn:nasa:pds:mars2020_meda:data_derived_env:we__0001___________der_ps__________________p",
+  "source_filename": "WE__0001___________DER_PS__________________P02.CSV",
+  "processing_level": "Derived",
+  "historical_measurements": true,
+  "rover_local_measurements_not_forecast": true,
+  "sol": 1,
+  "product_start_time_utc": "2021-02-19T21:35:54.970Z",
+  "product_stop_time_utc": "2021-02-19T22:29:54.996Z",
+  "row_count": 2330,
+  "valid_row_count": 2330,
+  "filtered_counts": {
+    "missing_pressure": 0,
+    "sentinel_pressure": 0,
+    "nonfinite_pressure": 0,
+    "nonpositive_pressure": 0,
+    "missing_local_time": 0
+  },
+  "quality_flags_present": false,
+  "quality_rule": "Keep finite positive PRESSURE values; drop PDS missing sentinel 999999999, missing pressure, and rows without LTST. This product has no quality-flag column.",
+  "measurement": {
+    "name": "atmospheric pressure",
+    "unit": "Pa",
+    "minimum": 713.91,
+    "maximum": 716.12,
+    "mean": 715.0023776824034,
+    "median": 715.03,
+    "standard_deviation_population": 0.48140220245857585
+  },
+  "time_basis": "SCLK, LMST and LTST are retained from the PDS table. Per-row UTC is not present in this product; only product-level UTC bounds are supplied by its label.",
+  "raw_file_sha256": "600d8d11b26b2127ba66f90889e7ba5621a0b8b788146bf5bf72a02be2e0a16c",
+  "raw_file_md5_verified": "ec537dbac49f78beb648de1d12ec7333",
+  "clean_csv": "WE__0001___________DER_PS__________________P02_clean.csv",
+  "summary_json": "WE__0001___________DER_PS__________________P02_summary.json",
+  "plot_png": "WE__0001___________DER_PS__________________P02_pressure.png"
+}

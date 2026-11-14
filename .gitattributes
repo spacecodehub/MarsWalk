@@ -1,0 +1,2 @@
+# PDS source products are archival inputs; preserve line endings byte for byte.
+data/science/meda/raw/* -text -whitespace
