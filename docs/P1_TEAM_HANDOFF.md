@@ -19,6 +19,7 @@ Current verified source package is geology-focused and appropriate as a spatial 
 - Rover imagery: NASA's 1,118-frame Mastcam-Z delta panorama is an aggregate reference only; individual PDS product IDs and coordinates are not supplied by that page. P1 acquired one separate PDS sol-466 Mastcam-Z image (next bullet); it has no geodetic coordinates/CRS and is not asserted to be in the panorama.
 - P1 rover sample: `data/raw/rover/mastcamz/sol0466/ZL0_0466_0708309593_769ECM_N0260756ZCAM08486_1100LMJ01.IMG` plus `.xml` label. Use its PDS LID, timestamp, 1648x1200x1 uint8 DN layout, SHA-256 and no-geolocation limitation from the manifests. This is available for science context, not a registered GIS layer or route-safety input.
 - RIMFAX is optional unless a Jezero-relevant original product is verified against the project scope.
+- The supplied requirements define no MEDA sol/time interval or additional rover product IDs. Do not treat the sol-1 sample as a complete, route-matched environmental series; select more observations only after P4/P6 specifies the science window. SIM 3464 already contains the regional CTX mosaic and stereo products, so no additional CTX scene is currently identified as necessary.
 
 ## P3 (backend)
 Use the manifests in:

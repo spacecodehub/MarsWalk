@@ -114,6 +114,9 @@ def check_manifest(path: Path) -> tuple[int, int, list[str]]:
 
         for row_index, row in enumerate(reader, start=2):
             rows_seen += 1
+            if None in row or any(value is None for key, value in row.items() if key is not None):
+                errors.append(f'{path.name}:{row_index}: CSV row field count does not match header')
+
             dataset_id = normalize(row.get('dataset_id'))
             product_id = normalize(row.get('product_id'))
             source_url = normalize(row.get('source_url'))
