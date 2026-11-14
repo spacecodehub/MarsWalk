@@ -2,7 +2,7 @@
 
 ## Repository audit
 
-The starting repository contained a placeholder README and a generic `.gitignore` only. Its original local `main` tracked `origin/main`; it had no backend, frontend, dependency manifest, API schema, database model, tests, dataset, GIS layer, documented team contracts or assigned-member files. I created the dedicated branch `saniya/science-environmental-intelligence` after the brief's required branch approval. There was no existing shared implementation to overwrite.
+At the start of this audit, the repository contained a placeholder README and generic `.gitignore` only; there was no backend, frontend, API schema, database model, tests, dataset, GIS layer, documented team contract or assigned-member code. Since then, `main` has received a Vite/React starter scaffold. Its current `src/App.jsx` is still the Vite counter/logo screen and has no Mars data provider, science data mode, or P1/P2 integration. This branch leaves that application scaffold unchanged.
 
 P1/P2 data and P3/P4/P5 contracts were not present, and no team coordination channel was provided. This work therefore adds a backend-neutral library and provisional data contracts only. It does not create FastAPI endpoints, a database, route planner, GIS workflow or React components. P3, P4 and P5 still need to review and approve any shared contract before integration.
 
@@ -25,7 +25,7 @@ The panorama evidence comes from NASA Science, which reports a 1,118-image color
 
 ## Data-mode boundary
 
-This branch adds no application data provider, application default, fallback, or data-mode setting. The starting repository has no application code to wire. The committed runtime catalogue contains only the NASA-published panorama aggregate and the authentic NASA PDS MEDA product; no synthetic/demo records or demo datasets are included. Small synthetic rows exist only inside unit tests for invalid-data handling. The command-line sample processor explicitly names the checked-in real MEDA product, while the reusable service requires callers to pass a product CSV and matching PDS4 label. This science contribution does not claim the complete MarsWalk application uses real data.
+This branch adds no application data provider, application default, fallback, or data-mode setting. The current Vite/React starter scaffold has no science integration to wire. The committed runtime catalogue contains only the NASA-published panorama aggregate and the authentic NASA PDS MEDA product; no synthetic/demo records or demo datasets are included. Small synthetic rows exist only inside unit tests for invalid-data handling. The command-line sample processor explicitly names the checked-in real MEDA product, while the reusable service requires callers to pass a product CSV and matching PDS4 label. This science contribution does not claim the complete MarsWalk application uses real data.
 
 ## Data contracts and integration status
 
@@ -52,7 +52,7 @@ Automated tests cover catalogue provenance/duplicates/coordinate ranges, PDS lab
 
 API compatibility and frontend labels cannot be validated until those modules and P3's approved contracts exist. P1 should supply the full observation set and product-to-image metadata; P2 should supply registered GIS layers and agreed CRS; P3/P4/P5 should review the provisional schema and consumer needs. The science priority score is a local heuristic and must not be used for route safety. RIMFAX is not integrated in this slice because no corresponding product or interpretation metadata was supplied for a target.
 
-**Integration status: WAITING FOR P1/P2 DATASETS.** At the last shared-repository check, GitHub listed only `main` (head `2c25606d9bd95c9340416011d933fd4074afa793`), no pull requests, and only `.gitignore` and `README.md` at the root. No P1/P2 branches, manifests, image products, MEDA collections or GIS layers were present. The independent sol-1 MEDA sample and NASA panorama resource already used by this module do not substitute for P1's mission dataset or P2's registered layers. See [P1_P2_DATA_INTEGRATION_STATUS.md](P1_P2_DATA_INTEGRATION_STATUS.md) for the precise missing inputs and proposed handoff paths.
+**Integration status: WAITING FOR P1/P2 DATASETS.** The latest shared-repository check found `main` at `c4c7153b7e98d898b60be8564d68f896945207e7`, with only the merged setup and README branches in addition to `main` and Saniya's branch. No P1/P2 branches or data pull requests were present. `main` now contains a Vite/React starter screen but no Mars data provider, science data mode, observation products or GIS layers. The independent sol-1 MEDA sample and NASA panorama resource already used by this module do not substitute for P1's mission dataset or P2's registered layers. See [P1_P2_DATA_INTEGRATION_STATUS.md](P1_P2_DATA_INTEGRATION_STATUS.md) for the precise missing inputs and proposed handoff paths.
 
 No provider has been activated or replaced and no application data mode exists to change in this repository. Any future real-data-provider activation or data-mode change requires Saniya's explicit approval. Integration and a migration report are deferred until P1/P2 data are pushed and validated.
 
@@ -66,4 +66,4 @@ Executed with Python 3.10.11, Pandas 2.3.3, NumPy 2.2.6 and Matplotlib 3.10.9:
 
 ## Delivery status
 
-Local branch: `saniya/science-environmental-intelligence`; rebased onto the latest fetched `origin/main`. The science implementation is commit `8593fcb`; the P1/P2 wait-state documentation is `cc4ccca`. No application/demo-data configuration is included. Do not merge without explicit approval.
+Branch: `saniya/science-environmental-intelligence`; pushed to GitHub. The science implementation, P1/P2 wait-state, and explicit MEDA input selection are in the branch history. No application/demo-data configuration is included. PR creation through the connected GitHub integration returned 403 (`Resource not accessible by integration`); the GitHub CLI is not installed. Do not merge without explicit approval.
