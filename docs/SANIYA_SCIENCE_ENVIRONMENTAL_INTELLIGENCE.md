@@ -13,7 +13,7 @@ P1/P2 data and P3/P4/P5 contracts were not present, and no team coordination cha
 - Reusable observation loading, duplicate and coordinate validation, lookup and instrument/sol filtering.
 - Reusable target validation, evidence-link validation, recommendations and a configurable 0–100 scientific priority heuristic separated from safety/accessibility.
 - MEDA PDS4 label parsing, checksum/row-count/schema verification, explicit quality filtering, descriptive pressure summary and historical-measurement plot.
-- A backend-neutral `ScienceService` facade for P3 to wrap after contract review; MEDA input paths are explicit arguments, with no implicit source/default/fallback.
+- A backend-neutral `ScienceService` facade for P3 to wrap after contract review; callers explicitly select the MEDA product and label and provide output/report directories, with no implicit source/default/fallback.
 
 ## Data and processing
 
@@ -40,15 +40,15 @@ No endpoints are proposed as final because no P3 contract was available. The `Sc
 ```powershell
 python -m venv .venv-science
 .\.venv-science\Scripts\python -m pip install -r requirements-science.txt
-.\.venv-science\Scripts\python scripts\process_meda.py
+.\.venv-science\Scripts\python scripts\process_meda.py --overwrite
 .\.venv-science\Scripts\python -m unittest discover -s tests -v
 ```
 
-The processing command writes a cleaned CSV and summary JSON to `data/science/meda/processed/`, plus a PNG to `data/science/meda/reports/`. Raw files are not rewritten. `.venv-science/` is ignored by Git.
+The processing command defaults to a cleaned CSV and summary JSON in `data/science/meda/processed/`, plus a PNG in `data/science/meda/reports/`; `--output-dir` and `--report-dir` select other destinations. Existing outputs are preserved unless `--overwrite` is explicitly supplied. The service API likewise requires caller-selected output and report directories and defaults to refusing existing outputs. Raw files are never rewritten. `.venv-science/` is ignored by Git.
 
 ## Validation and remaining integration work
 
-Automated tests cover catalogue provenance/duplicates/coordinate ranges, PDS label metadata, checksum and row-count validation, actual MEDA processing outputs, missing/sentinel/nonfinite/invalid-time handling, target evidence links and ranking separation, recommendations and service loading.
+Automated tests cover catalogue provenance/duplicates/coordinate ranges, PDS label metadata, checksum and row-count validation, actual MEDA processing outputs, missing/sentinel/nonfinite/invalid-time handling, preservation of existing outputs, protection against raw-input path collisions, target evidence links and ranking separation, recommendations and service loading.
 
 API compatibility and frontend labels cannot be validated until those modules and P3's approved contracts exist. P1 should supply the full observation set and product-to-image metadata; P2 should supply registered GIS layers and agreed CRS; P3/P4/P5 should review the provisional schema and consumer needs. The science priority score is a local heuristic and must not be used for route safety. RIMFAX is not integrated in this slice because no corresponding product or interpretation metadata was supplied for a target.
 
@@ -58,11 +58,11 @@ No provider has been activated or replaced and no application data mode exists t
 
 ## Test results
 
-Executed with Python 3.10.11, Pandas 2.3.3, NumPy 2.2.6 and Matplotlib 3.10.9:
+Executed in `.venv-science` with Python 3.10.11, Pandas 2.3.3, NumPy 2.2.6 and Matplotlib 3.10.9:
 
-- `python -m unittest discover -s tests -v` — 9 tests passed.
-- `python scripts/process_meda.py` — processed 2,330 of 2,330 rows; wrote the cleaned CSV, summary JSON and pressure PNG.
-- Plot inspected after generation; isolated sample points remain visible without connecting lines across gaps.
+- `python -m unittest discover -s tests -v` — 11 tests passed, including output-path safety cases.
+- `python scripts/process_meda.py` with temporary `--output-dir` and `--report-dir` destinations — processed 2,330 of 2,330 rows and generated the cleaned CSV, summary JSON and pressure PNG without replacing repository artifacts.
+- Raw CSV/XML hashes and observation/target catalogue hashes were unchanged by validation; pressure statistics still match the checked-in summary.
 
 ## Delivery status
 

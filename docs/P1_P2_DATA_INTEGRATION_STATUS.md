@@ -29,7 +29,7 @@ These paths define a proposed handoff layout for this integration. They are not 
    - Product files: `data/science/p1/meda/raw/<product-id>.CSV`.
    - Paired PDS4 labels: `data/science/p1/meda/raw/<product-id>.xml`.
    - Collection inventory and applicable SIS/readme documents: `data/science/p1/meda/metadata/`.
-   - Expected available sensor families: calibrated/derived air temperature (ATS), pressure (PS), relative humidity (RHS), wind (WIND), thermal infrared/surface temperature (TIRS), and radiation/dust (RDS), with product levels and quality metadata retained.
+   - Expected available sensor families include calibrated/derived air temperature (ATS), pressure (PS), relative humidity (RHS), wind (WIND), thermal infrared/surface temperature (TIRS), and the Radiation and Dust Sensor (RDS) instrument family. Any RDS radiation/radiometry measurements and dust measurements must remain distinct observables: do not combine their values, units, metadata, quality flags, or scientific interpretations. Their actual products and fields remain to be identified from P1's pending inventory; no product details are inferred here.
    - **Currently missing:** P1's complete or scoped MEDA collection and its inventory. Saniya's one official sol-1 derived pressure product is a small independently retrieved sample, not the P1 handoff.
 
 ## Missing P2 inputs and proposed delivery paths

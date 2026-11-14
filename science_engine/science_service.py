@@ -33,13 +33,24 @@ class ScienceService:
         return next((row for row in self.list_targets() if row["target_id"] == target_id), None)
 
     def meda_pressure_summary(
-        self, product_path: str | Path, label_path: str | Path
+        self,
+        product_path: str | Path,
+        label_path: str | Path,
+        *,
+        output_dir: str | Path,
+        report_dir: str | Path,
+        overwrite: bool = False,
     ) -> dict[str, Any]:
-        """Summarize an explicitly selected PDS product; no implicit data source is configured."""
+        """Summarize an explicit product into caller-selected output directories.
+
+        Existing generated files are preserved unless ``overwrite=True`` is
+        explicitly requested. The selected CSV and label are never output paths.
+        """
         summary = process_pressure_product(
             product_path, label_path,
-            self.root / "data/science/meda/processed",
-            self.root / "data/science/meda/reports",
+            output_dir,
+            report_dir,
+            overwrite=overwrite,
         )
-        summary_path = self.root / "data/science/meda/processed" / summary["summary_json"]
+        summary_path = Path(output_dir) / summary["summary_json"]
         return json.loads(summary_path.read_text(encoding="utf-8"))

@@ -90,6 +90,47 @@ class MedaTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "row count"):
                 process_pressure_product(self.csv, changed_label, Path(temporary) / "out2", Path(temporary) / "reports2")
 
+    def test_existing_outputs_are_preserved_without_explicit_overwrite(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "processed"
+            reports = Path(temporary) / "reports"
+            output.mkdir()
+            reports.mkdir()
+            clean_path = output / f"{self.csv.stem}_clean.csv"
+            summary_path = output / f"{self.csv.stem}_summary.json"
+            plot_path = reports / f"{self.csv.stem}_pressure.png"
+            clean_path.write_text("keep this output", encoding="utf-8")
+            summary_path.write_text("keep this summary", encoding="utf-8")
+            plot_path.write_bytes(b"keep this plot")
+            with self.assertRaisesRegex(FileExistsError, "overwrite=True"):
+                process_pressure_product(self.csv, self.xml, output, reports)
+            self.assertEqual(clean_path.read_text(encoding="utf-8"), "keep this output")
+            self.assertEqual(summary_path.read_text(encoding="utf-8"), "keep this summary")
+            self.assertEqual(plot_path.read_bytes(), b"keep this plot")
+            result = process_pressure_product(self.csv, self.xml, output, reports, overwrite=True)
+            self.assertEqual(result["valid_row_count"], 2330)
+            self.assertNotEqual(clean_path.read_text(encoding="utf-8"), "keep this output")
+
+    def test_output_paths_cannot_overwrite_selected_raw_label(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            csv_path = root / "sample.csv"
+            csv_bytes = self.csv.read_bytes()
+            csv_path.write_bytes(csv_bytes)
+            label_bytes = self.xml.read_text(encoding="utf-8")
+            label_bytes = label_bytes.replace(
+                "WE__0001___________DER_PS__________________P02.CSV", "sample.csv"
+            )
+            output = root / "output"
+            output.mkdir()
+            colliding_label = output / "sample_summary.json"
+            colliding_label.write_text(label_bytes, encoding="utf-8")
+            before = colliding_label.read_bytes()
+            with self.assertRaisesRegex(ValueError, "must not overwrite"):
+                process_pressure_product(csv_path, colliding_label, output, root / "reports", overwrite=True)
+            self.assertEqual(csv_path.read_bytes(), csv_bytes)
+            self.assertEqual(colliding_label.read_bytes(), before)
+
 
 class TargetTests(unittest.TestCase):
     def setUp(self):
@@ -131,6 +172,8 @@ class ServiceTests(unittest.TestCase):
             summary = service.meda_pressure_summary(
                 root / "data/science/meda/raw/WE__0001___________DER_PS__________________P02.CSV",
                 root / "data/science/meda/raw/WE__0001___________DER_PS__________________P02.xml",
+                output_dir=root / "data/science/meda/processed",
+                report_dir=root / "data/science/meda/reports",
             )
             self.assertEqual(len(service.list_observations()), 2)
             self.assertEqual(len(service.list_targets()), 1)

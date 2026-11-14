@@ -84,10 +84,31 @@ def process_pressure_product(
     label_path: str | Path,
     output_dir: str | Path,
     report_dir: str | Path,
+    *,
+    overwrite: bool = False,
 ) -> dict[str, Any]:
-    """Clean a single PDS MEDA derived pressure product without changing raw files."""
+    """Clean a PDS MEDA pressure product; existing outputs require explicit overwrite."""
     csv_path, label_path = Path(csv_path), Path(label_path)
     output_dir, report_dir = Path(output_dir), Path(report_dir)
+
+    product_stem = csv_path.stem
+    clean_path = output_dir / f"{product_stem}_clean.csv"
+    summary_path = output_dir / f"{product_stem}_summary.json"
+    plot_path = report_dir / f"{product_stem}_pressure.png"
+    input_paths = {csv_path.resolve(), label_path.resolve()}
+    output_paths = {clean_path.resolve(), summary_path.resolve(), plot_path.resolve()}
+    aliases_input = any(
+        output.exists() and source.exists() and output.samefile(source)
+        for output in (clean_path, summary_path, plot_path)
+        for source in (csv_path, label_path)
+    )
+    if input_paths & output_paths or aliases_input:
+        raise ValueError("Output paths must not overwrite the selected CSV or PDS4 label")
+    existing_outputs = [path for path in (clean_path, summary_path, plot_path) if path.exists()]
+    if existing_outputs and not overwrite:
+        names = ", ".join(str(path) for path in existing_outputs)
+        raise FileExistsError(f"Refusing to overwrite existing MEDA outputs: {names}; pass overwrite=True to replace them")
+
     output_dir.mkdir(parents=True, exist_ok=True)
     report_dir.mkdir(parents=True, exist_ok=True)
 
@@ -131,8 +152,6 @@ def process_pressure_product(
     if clean.empty:
         raise ValueError("No valid pressure records remain after documented quality filtering")
 
-    product_stem = csv_path.stem
-    clean_path = output_dir / f"{product_stem}_clean.csv"
     clean.to_csv(clean_path, index=False)
     pressure_np = clean["pressure_pa"].to_numpy(dtype=float)
     summary = {
@@ -165,8 +184,6 @@ def process_pressure_product(
         "clean_csv": clean_path.name,
     }
 
-    summary_path = output_dir / f"{product_stem}_summary.json"
-    plot_path = report_dir / f"{product_stem}_pressure.png"
     elapsed = clean["sclk_seconds"].to_numpy(dtype=float) - float(clean["sclk_seconds"].iloc[0])
     fig, ax = plt.subplots(figsize=(10, 4.6), constrained_layout=True)
     ax.scatter(elapsed, pressure_np, s=7, color="#c44e35", linewidths=0)
