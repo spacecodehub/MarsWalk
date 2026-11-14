@@ -12,7 +12,9 @@ dist
 dist-ssr
 *.local
 GIS/raw_data/
+ feature/back
 __pycache__/
+ main
 
 # Editor directories and files
 .vscode/*
