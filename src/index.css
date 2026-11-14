@@ -1,47 +1,29 @@
 :root {
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
-  color: #e7e5dc;
-  background: #101411;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-optical-sizing: auto;
-  font-weight: 400;
-
-  --ink: #e7e5dc;
-  --line: #2b312b;
-  --mint: #b7d9bb;
-  --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  --serif: Georgia, "Times New Roman", serif;
-
-  font-size: 14px;
+  font-family:Inter,"Segoe UI",Arial,sans-serif;
+  color:#e7e5dc;
+  background:#111512;
+  font-synthesis:none;
+  text-rendering:optimizeLegibility;
+  -webkit-font-smoothing:antialiased;
+  --ink:#e7e5dc;
+  --muted:#a2a89f;
+  --line:#303832;
+  --mint:#b9d7bd;
+  font-size:14px
 }
-
 * {
-  box-sizing: border-box;
+  box-sizing:border-box
 }
-
 body {
-  min-width: 320px;
-  min-height: 100vh;
-  margin: 0;
-  background:
-    radial-gradient(ellipse at 82% -18%, #263127 0, transparent 38%),
-    #101411;
+  min-width:320px;
+  min-height:100vh;
+  margin:0;
+  background:radial-gradient(ellipse at 90% -20%,#29352c 0,transparent 42%),#111512
 }
-
-button {
-  font-family: inherit;
+button,select {
+  font:inherit
 }
-
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid var(--mint);
-  outline-offset: 3px;
-}
-
-::selection {
-  color: #101411;
-  background: #b7d9bb;
+button:focus-visible,select:focus-visible,a:focus-visible {
+  outline:2px solid var(--mint);
+  outline-offset:3px
 }
