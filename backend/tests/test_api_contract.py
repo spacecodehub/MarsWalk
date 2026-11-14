@@ -35,9 +35,26 @@ def test_no_schema_field_removed_or_renamed():
         assert old <= new, f"{name} lost fields: {sorted(old - new)}"
 
 
-def test_health_reports_missing_data_honestly():
+def test_health_reports_missing_data_honestly(monkeypatch, tmp_path):
+    monkeypatch.setenv("MARSWALK_TERRAIN_DIR", str(tmp_path / "no_terrain"))
+    monkeypatch.setenv("MARSWALK_P6_TARGETS",
+                       str(tmp_path / "no_targets.json"))
     body = TestClient(app).get("/api/health").json()
     assert body["status"] == "ok"
-    # With no data files present, the API must say so, never pretend.
     assert body["terrain_available"] is False
     assert body["science_catalogue_available"] is False
+
+
+def test_science_targets_missing_catalogue_is_empty_not_invented(monkeypatch, tmp_path):
+    monkeypatch.setenv("MARSWALK_P6_TARGETS",
+                       str(tmp_path / "no_targets.json"))
+    body = TestClient(app).get("/api/science/targets").json()
+    assert body["available"] is False
+    assert body["located"] == [] and body["unlocated"] == []
+
+
+def test_science_targets_malformed_catalogue_returns_503(monkeypatch, tmp_path):
+    bad = tmp_path / "targets.json"
+    bad.write_text(json.dumps({"schema_version": "9.9", "targets": []}))
+    monkeypatch.setenv("MARSWALK_P6_TARGETS", str(bad))
+    assert TestClient(app).get("/api/science/targets").status_code == 503
