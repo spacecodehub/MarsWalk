@@ -46,6 +46,14 @@ def test_health_reports_missing_data_honestly(monkeypatch, tmp_path):
     assert body["science_catalogue_available"] is False
 
 
+def test_terrain_raster_route_reports_missing_layer(monkeypatch, tmp_path):
+    monkeypatch.setenv("MARSWALK_TERRAIN_DIR", str(tmp_path / "no_terrain"))
+    for name in ("DEM", "SLOPE", "ROUGHNESS", "ASPECT"):
+        monkeypatch.delenv(f"MARSWALK_{name}_PATH", raising=False)
+    response = TestClient(app).get("/api/navigation/terrain/dem.tif")
+    assert response.status_code == 503
+
+
 def test_science_targets_missing_catalogue_is_empty_not_invented(monkeypatch, tmp_path):
     monkeypatch.setenv("MARSWALK_P6_TARGETS",
                        str(tmp_path / "no_targets.json"))

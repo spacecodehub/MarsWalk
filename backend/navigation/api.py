@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from .a_star import MarsRoutePlanner, RouteError, SafetyConstraints
@@ -155,6 +156,24 @@ def layers() -> dict[str, Any]:
         "absolute_accuracy": "unverified; possible 100–200 m SIM offset remains unresolved",
     }
     return details
+
+
+@router.get("/navigation/terrain/{layer_name}.tif")
+def terrain_raster(
+    layer_name: Literal["dem", "slope", "aspect", "roughness"],
+) -> FileResponse:
+    """Serve a configured P2 raster through the same API origin as the UI."""
+    config = _terrain_configuration()
+    if "terrain_dir" in config:
+        path = P2TerrainAdapter(config["terrain_dir"]).paths()[layer_name]
+    else:
+        raw = config.get(f"{layer_name}_path")
+        path = Path(raw) if raw else None
+    if path is None or not path.is_file():
+        raise HTTPException(
+            status_code=503,
+            detail=f"Configured terrain layer is unavailable: {layer_name}")
+    return FileResponse(path, media_type="image/tiff", filename=path.name)
 
 
 def _science_grid_crs() -> Any:
