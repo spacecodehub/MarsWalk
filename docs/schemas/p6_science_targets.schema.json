@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:marswalk:schema:p6-science-targets:1.0",
+  "title": "MarsWalk P6 Science Targets",
+  "type": "object",
+  "required": ["schema_version", "consumer", "coordinate_reference", "targets"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "consumer": {"enum": ["p4_route_planning", "p5_map_visualization"]},
+    "coordinate_reference": {
+      "type": "object",
+      "required": ["requested_crs", "coordinate_order", "transform_policy"],
+      "properties": {
+        "requested_crs": {"type": ["string", "null"]},
+        "coordinate_order": {"const": ["x", "y"]},
+        "transform_policy": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "targets": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/target"}
+    },
+    "route_planning_policy": {"$ref": "#/$defs/routePolicy"},
+    "map_display_policy": {"$ref": "#/$defs/mapPolicy"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"consumer": {"const": "p4_route_planning"}}},
+      "then": {"required": ["route_planning_policy"], "not": {"required": ["map_display_policy"]}}
+    },
+    {
+      "if": {"properties": {"consumer": {"const": "p5_map_visualization"}}},
+      "then": {"required": ["map_display_policy"], "not": {"required": ["route_planning_policy"]}}
+    }
+  ],
+  "$defs": {
+    "location": {
+      "type": "object",
+      "required": ["coordinates", "crs", "units", "axis_order", "source_crs", "source_axis_order", "transformation"],
+      "properties": {
+        "coordinates": {
+          "type": "object",
+          "required": ["x", "y"],
+          "properties": {"x": {"type": "number"}, "y": {"type": "number"}},
+          "additionalProperties": false
+        },
+        "crs": {"type": "string", "minLength": 1},
+        "units": {"type": "string", "minLength": 1},
+        "axis_order": {"const": ["x", "y"]},
+        "source_crs": {"type": "string", "minLength": 1},
+        "source_axis_order": {"type": "array", "items": {"type": "string"}},
+        "transformation": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "required": ["source_crs", "target_crs", "method"],
+              "properties": {
+                "source_crs": {"type": "string"},
+                "target_crs": {"type": "string"},
+                "method": {"const": "caller_supplied_adapter"}
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "required": ["target_id", "name", "science_category", "location", "priority_score", "priority", "scientific_justification", "provenance", "data_quality", "availability"],
+      "properties": {
+        "target_id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "science_category": {"type": ["string", "null"]},
+        "location": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/location"}]},
+        "priority_score": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+        "priority": {
+          "type": "object",
+          "required": ["scale", "method", "role", "inputs", "weights", "excludes", "input_rationale"],
+          "properties": {
+            "scale": {"type": "string"},
+            "method": {"type": ["string", "null"]},
+            "role": {"const": "advisory_only"},
+            "inputs": {"type": ["object", "null"]},
+            "weights": {"type": ["object", "null"]},
+            "excludes": {"type": "array", "items": {"type": "string"}},
+            "input_rationale": {"type": "object", "additionalProperties": {"type": "string"}}
+          },
+          "additionalProperties": false
+        },
+        "scientific_justification": {
+          "type": "object",
+          "required": ["objective", "rationale", "recommended_investigations"],
+          "properties": {
+            "objective": {"type": ["string", "null"]},
+            "rationale": {"type": ["string", "null"]},
+            "recommended_investigations": {"type": "array"}
+          },
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object",
+          "required": ["supporting_observation_ids", "observations", "sources"],
+          "properties": {
+            "supporting_observation_ids": {"type": "array", "items": {"type": "string"}},
+            "observations": {"type": "array", "items": {"type": "object"}},
+            "sources": {"type": "array", "items": {"type": "object"}}
+          },
+          "additionalProperties": false
+        },
+        "data_quality": {
+          "type": "object",
+          "required": ["confidence", "confidence_rationale", "uncertainty", "limitations"],
+          "properties": {
+            "confidence": {"type": "string"},
+            "confidence_rationale": {"type": ["string", "null"]},
+            "uncertainty": {
+              "type": "object",
+              "required": ["status", "description"],
+              "properties": {"status": {"type": "string"}, "description": {"type": "string"}},
+              "additionalProperties": false
+            },
+            "limitations": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        },
+        "availability": {
+          "type": "object",
+          "required": ["location", "display_policy"],
+          "properties": {
+            "location": {"enum": ["available", "unavailable"]},
+            "display_policy": {"enum": ["map_feature", "list_only_unlocated"]}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "routePolicy": {
+      "type": "object",
+      "required": ["science_priority_role", "hard_safety_constraints_are_mandatory", "science_priority_may_override_hard_safety_constraints"],
+      "properties": {
+        "science_priority_role": {"const": "soft_preference_only"},
+        "hard_safety_constraints_are_mandatory": {"const": true},
+        "science_priority_may_override_hard_safety_constraints": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "mapPolicy": {
+      "type": "object",
+      "required": ["plot_only_targets_with_location", "unlocated_target_display", "transform_to_map_crs_when_needed"],
+      "properties": {
+        "plot_only_targets_with_location": {"const": true},
+        "unlocated_target_display": {"const": "list_only_unlocated"},
+        "transform_to_map_crs_when_needed": {"const": true}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

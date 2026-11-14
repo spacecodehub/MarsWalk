@@ -1,0 +1,33 @@
+{
+  "fixture_type": "MOCK_ONLY_NOT_MARS_DATA",
+  "targets": [
+    {
+      "target_id": "mock-target-p4-p5-coordinate-test",
+      "name": "Mock coordinate transform target",
+      "coordinates": {"x": 1250.0, "y": 2400.0},
+      "crs": "MOCK:LOCAL_METERS",
+      "coordinate_units": "m",
+      "geological_category": "mock category",
+      "scientific_objective": "Mock objective for interface testing only.",
+      "scientific_significance": "Mock rationale; this is not a Mars science claim.",
+      "supporting_observation_ids": [],
+      "evidence_sources": [
+        {
+          "url": "https://example.invalid/mock-source",
+          "source_type": "mock fixture",
+          "supports": "No real observation; test fixture only."
+        }
+      ],
+      "confidence": "mock",
+      "confidence_rationale": "Mock fixture; not evidence-derived.",
+      "limitations": ["MOCK ONLY; do not use as a real Mars target."],
+      "priority_inputs": {
+        "scientific_significance": 2,
+        "evidence_strength": 2,
+        "observation_availability": 2,
+        "geological_diversity": 2,
+        "investigation_value": 2
+      }
+    }
+  ]
+}
