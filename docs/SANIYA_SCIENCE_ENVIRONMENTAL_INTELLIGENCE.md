@@ -48,6 +48,10 @@ Automated tests cover catalogue provenance/duplicates/coordinate ranges, PDS lab
 
 API compatibility and frontend labels cannot be validated until those modules and P3's approved contracts exist. P1 should supply the full observation set and product-to-image metadata; P2 should supply registered GIS layers and agreed CRS; P3/P4/P5 should review the provisional schema and consumer needs. The science priority score is a local heuristic and must not be used for route safety. RIMFAX is not integrated in this slice because no corresponding product or interpretation metadata was supplied for a target.
 
+**Integration status: WAITING FOR P1/P2 DATASETS.** At the last shared-repository check, GitHub listed only `main` (head `2c25606d9bd95c9340416011d933fd4074afa793`), no pull requests, and only `.gitignore` and `README.md` at the root. No P1/P2 branches, manifests, image products, MEDA collections or GIS layers were present. The independent sol-1 MEDA sample and NASA panorama resource already used by this module do not substitute for P1's mission dataset or P2's registered layers. See [P1_P2_DATA_INTEGRATION_STATUS.md](P1_P2_DATA_INTEGRATION_STATUS.md) for the precise missing inputs and proposed handoff paths.
+
+No provider has been activated or replaced and no application data mode exists to change in this repository. Any future real-data-provider activation or data-mode change requires Saniya's explicit approval. Integration and a migration report are deferred until P1/P2 data are pushed and validated.
+
 ## Test results
 
 Executed with Python 3.10.11, Pandas 2.3.3, NumPy 2.2.6 and Matplotlib 3.10.9:
@@ -55,3 +59,7 @@ Executed with Python 3.10.11, Pandas 2.3.3, NumPy 2.2.6 and Matplotlib 3.10.9:
 - `python -m unittest discover -s tests -v` — 9 tests passed.
 - `python scripts/process_meda.py` — processed 2,330 of 2,330 rows; wrote the cleaned CSV, summary JSON and pressure PNG.
 - Plot inspected after generation; isolated sample points remain visible without connecting lines across gaps.
+
+## Delivery status
+
+Local branch: `saniya/science-environmental-intelligence`; rebased onto the latest fetched `origin/main`; local commit `8593fcb`. Push was rejected by the approval gate, so the branch is not on GitHub and no PR has been opened. Proposed PR title: `Saniya | Science Intelligence and Environmental Analysis`. Do not merge without explicit approval.
