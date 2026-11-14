@@ -26,10 +26,13 @@ python GIS/scripts/render_mola_map.py
 
 The script validates the raster layout, treats the ENVI header's ignore value
 as NoData, and writes `public/mars-mola-elevation.png` plus a JSON provenance
-file.
-The source raster is ignored by Git; the generated image is small enough to
-serve with the app. MOLA is global context at about 3.7 km/pixel at the
-equator—not a rover-scale route or safety map.
+file. `GIS/raw_data/` is covered by a Git ignore rule, but the MOLA products
+already committed to the repository remain tracked. New files in that folder
+are ignored unless explicitly added. MOLA is global context at about
+3.7 km/pixel at the equator—not a rover-scale route or safety map.
+
+For the regional GIS inventory, validation workflow, data provenance, and
+downstream handoff status, see [`GIS/README.md`](GIS/README.md).
 
 ## Tech
 React, Vite, Three.js (React Three Fiber), Zustand
