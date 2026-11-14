@@ -1,0 +1,227 @@
+{
+  "status": "relative-image-registration-estimate",
+  "inputs": {
+    "sim_ctx_mosaic": {
+      "path": "Datasetmars/data/raw/geology/extracted/sim3464_database/sim3464_JezeroNili_FINAL/Rasters/Caltech_CTX_mosaic_feb2018/Nili_CTX_Mosaic_Beta01_Feb2018_MTM.tif",
+      "product_id": "Nili_CTX_Mosaic_Beta01_Feb2018_MTM"
+    },
+    "hirise_red": {
+      "path": "GIS/raw_data/ESP_022680_1985_RED_A_01_ORTHO.JP2",
+      "source_url": "https://hirise-pds.lpl.arizona.edu/PDS/DTM/ESP/ORB_022600_022699/ESP_022680_1985_ESP_022746_1985/ESP_022680_1985_RED_A_01_ORTHO.JP2",
+      "product_id": "ESP_022680_1985_RED_A_01_ORTHO"
+    }
+  },
+  "method": "Warp both rasters to the HiRISE DTM-derived 5 m Mars equirectangular grid; Gaussian-smoothed Sobel gradient magnitude; 192x192-pixel tiles; normalized cross-correlation searched within +/-80 pixels; retain NCC >= 0.3.",
+  "common_grid": {
+    "crs_wkt": "PROJCS[\"EQUIRECTANGULAR MARS\",GEOGCS[\"GCS_MARS\",DATUM[\"D_MARS\",SPHEROID[\"MARS_localRadius\",3394839.8133163,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",15],PARAMETER[\"central_meridian\",77.44],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+    "pixel_spacing_m": [
+      5.0,
+      5.0
+    ],
+    "dimensions": [
+      1517,
+      3224
+    ],
+    "overlap_fraction": 1.0
+  },
+  "result": {
+    "tie_count": 12,
+    "median_ctx_relative_shift_m": [
+      -10.0,
+      -55.0
+    ],
+    "median_absolute_deviation_m": [
+      5.0,
+      5.0
+    ],
+    "tie_matches": [
+      {
+        "template_origin_pixel": [
+          300,
+          350
+        ],
+        "ncc_score": 0.6749617457389832,
+        "ctx_relative_shift_pixels": [
+          -1.0,
+          12.0
+        ],
+        "ctx_relative_shift_m": [
+          -5.0,
+          -60.0
+        ]
+      },
+      {
+        "template_origin_pixel": [
+          700,
+          350
+        ],
+        "ncc_score": 0.6291796565055847,
+        "ctx_relative_shift_pixels": [
+          -1.0,
+          12.0
+        ],
+        "ctx_relative_shift_m": [
+          -5.0,
+          -60.0
+        ]
+      },
+      {
+        "template_origin_pixel": [
+          300,
+          900
+        ],
+        "ncc_score": 0.5258469581604004,
+        "ctx_relative_shift_pixels": [
+          -5.0,
+          12.0
+        ],
+        "ctx_relative_shift_m": [
+          -25.0,
+          -60.0
+        ]
+      },
+      {
+        "template_origin_pixel": [
+          700,
+          900
+        ],
+        "ncc_score": 0.4399631917476654,
+        "ctx_relative_shift_pixels": [
+          -2.0,
+          12.0
+        ],
+        "ctx_relative_shift_m": [
+          -10.0,
+          -60.0
+        ]
+      },
+      {
+        "template_origin_pixel": [
+          300,
+          1500
+        ],
+        "ncc_score": 0.665601372718811,
+        "ctx_relative_shift_pixels": [
+          -10.0,
+          11.0
+        ],
+        "ctx_relative_shift_m": [
+          -50.0,
+          -55.0
+        ]
+      },
+      {
+        "template_origin_pixel": [
+          700,
+          1500
+        ],
+        "ncc_score": 0.6514424681663513,
+        "ctx_relative_shift_pixels": [
+          -1.0,
+          11.0
+        ],
+        "ctx_relative_shift_m": [
+          -5.0,
+          -55.0
+        ]
+      },
+      {
+        "template_origin_pixel": [
+          1100,
+          1500
+        ],
+        "ncc_score": 0.600715696811676,
+        "ctx_relative_shift_pixels": [
+          -3.0,
+          11.0
+        ],
+        "ctx_relative_shift_m": [
+          -15.0,
+          -55.0
+        ]
+      },
+      {
+        "template_origin_pixel": [
+          300,
+          2200
+        ],
+        "ncc_score": 0.717934250831604,
+        "ctx_relative_shift_pixels": [
+          -14.0,
+          11.0
+        ],
+        "ctx_relative_shift_m": [
+          -70.0,
+          -55.0
+        ]
+      },
+      {
+        "template_origin_pixel": [
+          700,
+          2200
+        ],
+        "ncc_score": 0.5672171711921692,
+        "ctx_relative_shift_pixels": [
+          -1.0,
+          10.0
+        ],
+        "ctx_relative_shift_m": [
+          -5.0,
+          -50.0
+        ]
+      },
+      {
+        "template_origin_pixel": [
+          1100,
+          2200
+        ],
+        "ncc_score": 0.5992228388786316,
+        "ctx_relative_shift_pixels": [
+          -2.0,
+          10.0
+        ],
+        "ctx_relative_shift_m": [
+          -10.0,
+          -50.0
+        ]
+      },
+      {
+        "template_origin_pixel": [
+          700,
+          2700
+        ],
+        "ncc_score": 0.7276051044464111,
+        "ctx_relative_shift_pixels": [
+          -3.0,
+          10.0
+        ],
+        "ctx_relative_shift_m": [
+          -15.0,
+          -50.0
+        ]
+      },
+      {
+        "template_origin_pixel": [
+          1100,
+          2700
+        ],
+        "ncc_score": 0.7598661184310913,
+        "ctx_relative_shift_pixels": [
+          0.0,
+          10.0
+        ],
+        "ctx_relative_shift_m": [
+          0.0,
+          -50.0
+        ]
+      }
+    ],
+    "interpretation": "Relative apparent image displacement only: the matched CTX features lie at these offsets from the HiRISE RED features under the products' delivered map georeferencing."
+  },
+  "limitations": [
+    "This is not an absolute control-point survey or a positional-accuracy estimate.",
+    "The HiRISE orthophoto is not a Mars 2020 operational control dataset.",
+    "The estimate covers only the shared HiRISE footprint and cannot establish the offset elsewhere in SIM 3464.",
+    "A dedicated, published Mars 2020 operational basemap or control-point set is required to resolve the reported 100-200 m concern."
+  ]
+}

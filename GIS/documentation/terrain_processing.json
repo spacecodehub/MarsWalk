@@ -1,0 +1,222 @@
+{
+  "source": {
+    "product_id": "DTEEC_022680_1985_022746_1985_A01",
+    "source_url": "https://hirise-pds.lpl.arizona.edu/PDS/DTM/ESP/ORB_022600_022699/ESP_022680_1985_ESP_022746_1985/DTEEC_022680_1985_022746_1985_A01.IMG",
+    "path": "GIS/raw_data/DTEEC_022680_1985_022746_1985_A01.IMG",
+    "sha256": "b88dac5862f64769a1dae0ad55271952b184f4529aa09980c13a149a0a628add",
+    "file_size_bytes": 479934208,
+    "dimensions": "7514x15967",
+    "crs_wkt": "PROJCS[\"EQUIRECTANGULAR MARS\",GEOGCS[\"GCS_MARS\",DATUM[\"D_MARS\",SPHEROID[\"MARS_localRadius\",3394839.8133163,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",15],PARAMETER[\"central_meridian\",77.44],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+    "pixel_spacing_m": [
+      1.0097038146737,
+      1.0097038146737
+    ],
+    "vertical_reference": "Meters above the martian equipotential surface (Mars 2000 Datum), verified in the embedded PDS3 IMAGE.NOTE.",
+    "label": "Embedded PDS3 label; raw parsed label retained below.",
+    "nodata": -3.4028226550889045e+38,
+    "valid_elevation": {
+      "valid_min": -2659.6416015625,
+      "valid_max": -1704.25732421875,
+      "valid_mean": -2517.757206158908,
+      "valid_cells": 86116803
+    }
+  },
+  "processing": {
+    "software": "GDAL GDAL 3.13.3 \"Iowa City\", released 2026/08/13",
+    "slope": "GDAL DEMProcessing slope; Horn 3x3 derivative; degrees; z/horizontal scale 1.0.",
+    "aspect": "GDAL DEMProcessing aspect; Horn 3x3 derivative; clockwise azimuth degrees from north; flat-cell aspect is NoData.",
+    "roughness": "GDAL DEMProcessing Roughness; 3x3 neighborhood maximum minus minimum elevation; metres.",
+    "nodata": "Input PDS missing constant is honored. Edge computation is disabled, leaving a NoData border; neighborhoods containing NoData are not filled or interpolated.",
+    "resampling": "GDAL Warp average from the 1.0097 m source DTM to the 5 m analysis DEM; terrain derivatives share its grid.",
+    "output_creation": "Cloud-independent GeoTIFF, DEFLATE compression, floating-point predictor, tiled; no source DTM modifications.",
+    "project": "GIS/projects/MarsWalk_Jezero.qgz"
+  },
+  "outputs": {
+    "analysis_dem": {
+      "path": "GIS/processed/hirise_terrain/DTEEC_022680_1985_022746_1985_A01_dem_5m.tif",
+      "file_size_bytes": 6682456,
+      "sha256": "9ff7626f8493a7c4b83a48e7a05a96c2a09fec0b440b9dc96407c04c7ddbbafa",
+      "dimensions": "1517x3224",
+      "pixel_spacing_m": [
+        5.0,
+        5.0
+      ],
+      "crs_wkt": "PROJCS[\"EQUIRECTANGULAR MARS\",GEOGCS[\"GCS_MARS\",DATUM[\"D_MARS\",SPHEROID[\"MARS_localRadius\",3394839.8133163,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",15],PARAMETER[\"central_meridian\",77.44],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+      "nodata": -3.4028226550889045e+38,
+      "resampling": "GDAL Warp average from source 1.0097 m grid to 5 m grid."
+    },
+    "slope": {
+      "path": "GIS/processed/hirise_terrain/DTEEC_022680_1985_022746_1985_A01_slope_deg.tif",
+      "file_size_bytes": 11475998,
+      "sha256": "b50f8a7e3dffc8589e02cb98bf916a7e4256803fc7fa2f2c84bf51a665beb083",
+      "dimensions": "1517x3224",
+      "pixel_spacing_m": [
+        5.0,
+        5.0
+      ],
+      "crs_wkt": "PROJCS[\"EQUIRECTANGULAR MARS\",GEOGCS[\"GCS_MARS\",DATUM[\"D_MARS\",SPHEROID[\"MARS_localRadius\",3394839.8133163,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",15],PARAMETER[\"central_meridian\",77.44],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+      "nodata": -9999.0,
+      "valid_min": 0.001398822758346796,
+      "valid_max": 58.27518081665039,
+      "valid_mean": 6.473506379988364,
+      "valid_cells": 3507080
+    },
+    "aspect": {
+      "path": "GIS/processed/hirise_terrain/DTEEC_022680_1985_022746_1985_A01_aspect_deg.tif",
+      "file_size_bytes": 11502949,
+      "sha256": "48af94a7ae035b5f95a99ab738ddb208b5207be3f086de53b990425af0e3f11f",
+      "dimensions": "1517x3224",
+      "pixel_spacing_m": [
+        5.0,
+        5.0
+      ],
+      "crs_wkt": "PROJCS[\"EQUIRECTANGULAR MARS\",GEOGCS[\"GCS_MARS\",DATUM[\"D_MARS\",SPHEROID[\"MARS_localRadius\",3394839.8133163,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",15],PARAMETER[\"central_meridian\",77.44],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+      "nodata": -9999.0,
+      "valid_min": 0.0,
+      "valid_max": 359.9952697753906,
+      "valid_mean": 128.38966751268643,
+      "valid_cells": 3507080
+    },
+    "roughness": {
+      "path": "GIS/processed/hirise_terrain/DTEEC_022680_1985_022746_1985_A01_roughness_3x3_m.tif",
+      "file_size_bytes": 7092078,
+      "sha256": "af06a581ca1c20981ff6519087d8a8667cbda1b2b328f0a3e2e681d5a07e7f34",
+      "dimensions": "1517x3224",
+      "pixel_spacing_m": [
+        5.0,
+        5.0
+      ],
+      "crs_wkt": "PROJCS[\"EQUIRECTANGULAR MARS\",GEOGCS[\"GCS_MARS\",DATUM[\"D_MARS\",SPHEROID[\"MARS_localRadius\",3394839.8133163,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",15],PARAMETER[\"central_meridian\",77.44],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+      "nodata": -9999.0,
+      "valid_min": 0.046875,
+      "valid_max": 17.8427734375,
+      "valid_mean": 1.5778080334422953,
+      "valid_cells": 3507080
+    }
+  },
+  "qgis_project_layer_count": 24,
+  "limits": [
+    "The HiRISE DTM footprint covers only a small portion of the SIM 3464 region.",
+    "The derivatives are local terrain descriptors, not a rover safety or route product.",
+    "The vertical reference is verified for the HiRISE DTM only; other SIM DEM vertical references remain unverified."
+  ],
+  "pds_label_json": {
+    "PDS_VERSION_ID": "PDS3",
+    "RECORD_TYPE": "FIXED_LENGTH",
+    "RECORD_BYTES": 30056,
+    "FILE_RECORDS": 15968,
+    "^IMAGE": 2,
+    "DATA_SET_ID": "MRO-M-HIRISE-5-DTM-V1.0",
+    "DATA_SET_NAME": "MRO MARS HIGH RESOLUTION IMAGING SCIENCE\\r\\n                             EXPERIMENT DTM V1.0",
+    "PRODUCER_INSTITUTION_NAME": "UNIVERSITY OF ARIZONA",
+    "PRODUCER_ID": "UA",
+    "PRODUCER_FULL_NAME": "ALFRED MCEWEN, KRIS AMANDA AKERS",
+    "PRODUCT_ID": "DTEEC_022680_1985_022746_1985_A01",
+    "PRODUCT_VERSION_ID": "1",
+    "INSTRUMENT_HOST_NAME": "MARS RECONNAISSANCE ORBITER",
+    "INSTRUMENT_HOST_ID": "MRO",
+    "INSTRUMENT_NAME": "HIGH RESOLUTION IMAGING SCIENCE EXPERIMENT",
+    "INSTRUMENT_ID": "HIRISE",
+    "TARGET_NAME": "MARS",
+    "SOURCE_PRODUCT_ID": [
+      "ESP_022680_1985",
+      "ESP_022746_1985"
+    ],
+    "RATIONALE_DESC": "Possible MSL rover landing site near Jezero\\r\\n                             Crater ",
+    "SOFTWARE_NAME": "SOCET Set 5.6.0",
+    "IMAGE": {
+      "_type": "object",
+      "LINES": 15967,
+      "LINE_SAMPLES": 7514,
+      "BANDS": 1,
+      "OFFSET": 0.0,
+      "SCALING_FACTOR": 1.0,
+      "NOTE": "Pixel values in this file represent elevations in\\r\\n                      meters above the martian equipotential surface (Mars\\r\\n                      2000 Datum) defined by Smith, et al. (2001). Conversion\\r\\n                      from pixel units to geophysical units is given by the\\r\\n                      keyvalues for SCALING_FACTOR and OFFSET. This DTM was\\r\\n                      produced using ISIS and SOCET Set (copyright BAE\\r\\n                      Systems) software as described in Kirk et al. (2008).",
+      "SAMPLE_BITS": 32,
+      "SAMPLE_BIT_MASK": "2#11111111111111111111111111111111#",
+      "SAMPLE_TYPE": "PC_REAL",
+      "MISSING_CONSTANT": "16#FF7FFFFB#",
+      "VALID_MINIMUM": -2659.64,
+      "VALID_MAXIMUM": -1704.26,
+      "END_OBJECT": "IMAGE"
+    },
+    "IMAGE_MAP_PROJECTION": {
+      "_type": "object",
+      "^DATA_SET_MAP_PROJECTION": "DSMAP.CAT",
+      "MAP_PROJECTION_TYPE": "EQUIRECTANGULAR",
+      "PROJECTION_LATITUDE_TYPE": "PLANETOCENTRIC",
+      "A_AXIS_RADIUS": {
+        "value": 3394.8398133163,
+        "unit": "KM"
+      },
+      "B_AXIS_RADIUS": {
+        "value": 3394.8398133163,
+        "unit": "KM"
+      },
+      "C_AXIS_RADIUS": {
+        "value": 3394.8398133163,
+        "unit": "KM"
+      },
+      "COORDINATE_SYSTEM_NAME": "PLANETOCENTRIC",
+      "POSITIVE_LONGITUDE_DIRECTION": "EAST",
+      "KEYWORD_LATITUDE_TYPE": "PLANETOCENTRIC",
+      "CENTER_LATITUDE": {
+        "value": 15.0,
+        "unit": "DEG"
+      },
+      "CENTER_LONGITUDE": {
+        "value": 77.44,
+        "unit": "DEG"
+      },
+      "LINE_FIRST_PIXEL": 1,
+      "LINE_LAST_PIXEL": 15967,
+      "SAMPLE_FIRST_PIXEL": 1,
+      "SAMPLE_LAST_PIXEL": 7514,
+      "MAP_PROJECTION_ROTATION": {
+        "value": 0.0,
+        "unit": "DEG"
+      },
+      "MAP_RESOLUTION": {
+        "value": 58681.69601727,
+        "unit": "PIX/DEG"
+      },
+      "MAP_SCALE": {
+        "value": 1.0097038146737,
+        "unit": "METERS/PIXEL"
+      },
+      "MAXIMUM_LATITUDE": {
+        "value": 18.368640005209,
+        "unit": "DEG"
+      },
+      "MINIMUM_LATITUDE": {
+        "value": 18.096543803297,
+        "unit": "DEG"
+      },
+      "LINE_PROJECTION_OFFSET": {
+        "value": 1077902.5,
+        "unit": "PIXEL"
+      },
+      "SAMPLE_PROJECTION_OFFSET": {
+        "value": 3916.4999999999,
+        "unit": "PIXEL"
+      },
+      "EASTERNMOST_LONGITUDE": {
+        "value": 77.50346219,
+        "unit": "DEG"
+      },
+      "WESTERNMOST_LONGITUDE": {
+        "value": 77.37089912,
+        "unit": "DEG"
+      },
+      "END_OBJECT": "IMAGE_MAP_PROJECTION"
+    },
+    "VIEWING_PARAMETERS": {
+      "_type": "object",
+      "NORTH_AZIMUTH": {
+        "value": 270.0,
+        "unit": "DEG"
+      },
+      "END_OBJECT": "VIEWING_PARAMETERS"
+    }
+  }
+}
