@@ -17,7 +17,8 @@ from .terrain_adapter import P2TerrainAdapter, TerrainDataError
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_TERRAIN_DIR = ROOT / "GIS" / "processed" / "hirise_terrain"
-DEFAULT_TARGETS = ROOT / "data" / "science" / "targets" / "targets.json"
+DEFAULT_TARGETS = ROOT.parents[1] / "data" / \
+    "science" / "targets" / "targets.json"
 router = APIRouter(tags=["navigation"])
 
 

@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from main import app
+from navigation.api import DEFAULT_TARGETS
 
 SNAPSHOT = Path(__file__).parent / "openapi_snapshot.json"
 
@@ -51,6 +52,12 @@ def test_science_targets_missing_catalogue_is_empty_not_invented(monkeypatch, tm
     body = TestClient(app).get("/api/science/targets").json()
     assert body["available"] is False
     assert body["located"] == [] and body["unlocated"] == []
+
+
+def test_science_targets_default_points_to_repository_catalogue():
+    expected = Path(__file__).resolve(
+    ).parents[2] / "data" / "science" / "targets" / "targets.json"
+    assert DEFAULT_TARGETS == expected
 
 
 def test_science_targets_malformed_catalogue_returns_503(monkeypatch, tmp_path):
