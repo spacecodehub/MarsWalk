@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-space-950 text-slate-200 antialiased selection:bg-mars-500/30 selection:text-mars-500;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Photorealistic CSS-shaded 3D Mars Sphere (No external WebGL bloat) */
+.mars-globe {
+  background-image: url('/assets/mars_2k_color.jpg'); /* Drop NASA/USGS Mars equirectangular map in public/assets/ */
+  background-size: 200% 100%;
+  box-shadow: 
+    inset -35px -20px 60px rgba(0, 0, 0, 0.92),
+    inset 12px 8px 30px rgba(255, 190, 150, 0.25),
+    0 0 55px rgba(217, 107, 67, 0.14);
+}
+.app-fade-in { animation: appFade 0.8s ease both; }
+@keyframes appFade { from { opacity: 0; } to { opacity: 1; } }
+
+.mw-title {
+  margin: 0;
+  font-size: clamp(44px, 8vw, 96px);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 0 30px rgba(232, 120, 70, 0.55);
+}
+.mw-sub {
+  margin: 8px 0 0;
+  font-family: monospace;
+  letter-spacing: 0.18em;
+  opacity: 0.8;
+}
+
+.mw-return {
+  position: fixed;
+  left: 16px;
+  bottom: 60px;
+  z-index: 50;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(225, 110, 70, 0.6);
+  background: rgba(20, 12, 10, 0.85);
+  color: #f6e7da;
+  font-family: monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+.mw-return:hover {
+  background: rgba(225, 110, 70, 0.9);
+  transform: translateY(-1px);
+}
