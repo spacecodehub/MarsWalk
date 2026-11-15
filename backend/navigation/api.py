@@ -1,28 +1,25 @@
 """FastAPI endpoints for MarsWalk terrain-aware route planning."""
-
 from __future__ import annotations
 
 import os
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import APIRouter, FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from a_star import MarsRoutePlanner, RouteError, SafetyConstraints
-from compare_routes import compare_routes
-from science_adapter import P6ScienceAdapter, ScienceDataError
-from terrain_adapter import P2TerrainAdapter, TerrainDataError
-from science_engine.observations import CatalogueError, load_observations
-from science_engine.target_integration import serialize_science_targets
-from science_engine.targets import load_targets, rank_targets
+from .a_star import MarsRoutePlanner, RouteError, SafetyConstraints
+from .compare_routes import compare_routes
+from .science_adapter import P6ScienceAdapter, ScienceDataError
+from .terrain_adapter import P2TerrainAdapter, TerrainDataError
 
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_TERRAIN_DIR = ROOT / "GIS" / "processed" / "hirise_terrain"
-DEFAULT_TARGETS = ROOT / "data" / "science" / "targets" / "targets.json"
+DEFAULT_TARGETS = ROOT.parents[1] / "data" / \
+    "science" / "targets" / "targets.json"
 router = APIRouter(tags=["navigation"])
 
 
@@ -78,14 +75,17 @@ def _hazards(req: RouteRequest) -> tuple[list[dict[str, Any]] | None, str | None
     if value.get("type") == "FeatureCollection":
         features = value.get("features", [])
         if not isinstance(features, list) or not features:
-            raise HTTPException(status_code=422, detail="hazard_geojson FeatureCollection must contain Polygon features")
-        geometries = [f.get("geometry") for f in features if isinstance(f, dict)]
+            raise HTTPException(
+                status_code=422, detail="hazard_geojson FeatureCollection must contain Polygon features")
+        geometries = [f.get("geometry")
+                      for f in features if isinstance(f, dict)]
     elif value.get("type") == "Feature":
         geometries = [value.get("geometry")]
     else:
         geometries = [value]
     if not geometries or any(geometry is None for geometry in geometries):
-        raise HTTPException(status_code=422, detail="Each hazard feature must contain a Polygon or MultiPolygon geometry")
+        raise HTTPException(
+            status_code=422, detail="Each hazard feature must contain a Polygon or MultiPolygon geometry")
     return geometries, req.hazard_crs
 
 
@@ -95,9 +95,10 @@ def _planner(req: RouteRequest) -> MarsRoutePlanner:
     try:
         layers = _terrain_configuration()
         # Load the terrain once to obtain its CRS for the P6 coordinate adapter.
-        from terrain_adapter import P2TerrainAdapter, load_aligned_terrain
+        from .terrain_adapter import P2TerrainAdapter, load_aligned_terrain
         loaded = P2TerrainAdapter(layers["terrain_dir"]).load() if "terrain_dir" in layers else load_aligned_terrain(
-            layers["dem_path"], layers["slope_path"], layers["roughness_path"], layers.get("aspect_path"),
+            layers["dem_path"], layers["slope_path"], layers["roughness_path"], layers.get(
+                "aspect_path"),
         )
         targets, _ = P6ScienceAdapter(target_path).load(loaded.crs)
         return MarsRoutePlanner(
@@ -124,7 +125,8 @@ def health() -> dict[str, Any]:
     if "terrain_dir" in config:
         available = P2TerrainAdapter(config["terrain_dir"]).available()
     else:
-        available = all(Path(config[key]).is_file() for key in ("dem_path", "slope_path", "roughness_path"))
+        available = all(Path(config[key]).is_file() for key in (
+            "dem_path", "slope_path", "roughness_path"))
     targets = Path(os.environ.get("MARSWALK_P6_TARGETS", DEFAULT_TARGETS))
     return {"status": "ok", "terrain_available": available, "science_catalogue_available": targets.is_file()}
 
@@ -133,17 +135,21 @@ def health() -> dict[str, Any]:
 def layers() -> dict[str, Any]:
     config = _terrain_configuration()
     if "terrain_dir" in config:
-        details = P2TerrainAdapter(config["terrain_dir"], validate_documented_grid=False).inspect()
+        details = P2TerrainAdapter(
+            config["terrain_dir"], validate_documented_grid=False).inspect()
     else:
-        details = {"available": True, "source": "configured aligned raster set", "layers": {}}
-        from terrain_adapter import _read_band
+        details = {"available": True,
+                   "source": "configured aligned raster set", "layers": {}}
+        from .terrain_adapter import _read_band
         for key, path in config.items():
             try:
                 _, _, meta, _, _ = _read_band(Path(path))
-                details["layers"][key.removesuffix("_path")] = {"available": True, **meta.__dict__}
+                details["layers"][key.removesuffix("_path")] = {
+                    "available": True, **meta.__dict__}
             except TerrainDataError as exc:
                 details["available"] = False
-                details["layers"][key.removesuffix("_path")] = {"available": False, "error": str(exc)}
+                details["layers"][key.removesuffix("_path")] = {
+                    "available": False, "error": str(exc)}
     details["coverage"] = "P2 data cover only the HiRISE stereo footprint; no routing outside valid raster coverage."
     details["alignment"] = {
         "relative_estimate": "12-tie median CTX-relative displacement: 10 m west, 55 m south; component MAD 5 m",
@@ -153,29 +159,65 @@ def layers() -> dict[str, Any]:
 
 
 @router.get("/navigation/terrain/{layer_name}.tif")
-def terrain_raster(layer_name: Literal["dem", "slope", "aspect", "roughness"]) -> FileResponse:
+def terrain_raster(
+    layer_name: Literal["dem", "slope", "aspect", "roughness"],
+) -> FileResponse:
     """Serve a configured P2 raster through the same API origin as the UI."""
     config = _terrain_configuration()
     if "terrain_dir" in config:
         path = P2TerrainAdapter(config["terrain_dir"]).paths()[layer_name]
     else:
-        path = Path(config.get(f"{layer_name}_path", "")) if config.get(f"{layer_name}_path") else None
+        raw = config.get(f"{layer_name}_path")
+        path = Path(raw) if raw else None
     if path is None or not path.is_file():
-        raise HTTPException(status_code=503, detail=f"Configured terrain layer is unavailable: {layer_name}")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Configured terrain layer is unavailable: {layer_name}")
     return FileResponse(path, media_type="image/tiff", filename=path.name)
+
+
+def _science_grid_crs() -> Any:
+    """CRS of the terrain grid, or None when terrain data is unavailable."""
+    try:
+        layers = _terrain_configuration()
+        if "terrain_dir" in layers:
+            loaded = P2TerrainAdapter(layers["terrain_dir"]).load()
+        else:
+            from .terrain_adapter import load_aligned_terrain
+            loaded = load_aligned_terrain(
+                layers["dem_path"], layers["slope_path"], layers["roughness_path"],
+                layers.get("aspect_path"),
+            )
+        return loaded.crs
+    except TerrainDataError:
+        return None
 
 
 @router.get("/science/targets")
 def science_targets() -> dict[str, Any]:
-    """Return P6's versioned map payload, retaining null locations as list-only."""
-    target_path = Path(os.environ.get("MARSWALK_P6_TARGETS", DEFAULT_TARGETS))
-    observations_path = ROOT / "data" / "science" / "observations" / "observations.json"
+    path = Path(os.environ.get("MARSWALK_P6_TARGETS", DEFAULT_TARGETS))
+    if not path.is_file():
+        return {
+            "available": False,
+            "reason": "P6 catalogue is not present in this checkout",
+            "grid_crs_available": False,
+            "located": [],
+            "unlocated": [],
+        }
+    grid_crs = _science_grid_crs()
     try:
-        observations = load_observations(observations_path)
-        targets = rank_targets(load_targets(target_path, {row["record_id"] for row in observations}))
-        return serialize_science_targets(targets, observations, consumer="p5_map_visualization")
-    except (OSError, ValueError) as exc:
-        raise HTTPException(status_code=503, detail=f"P6 science catalogue is unavailable or invalid: {exc}") from exc
+        located, unlocated = P6ScienceAdapter(path).load(grid_crs)
+    except ScienceDataError as exc:
+        detail = str(exc)
+        if grid_crs is None:
+            detail += " (terrain data is unavailable, so located targets cannot be placed on the grid)"
+        raise HTTPException(status_code=503, detail=detail) from exc
+    return {
+        "available": True,
+        "grid_crs_available": grid_crs is not None,
+        "located": [asdict(t) for t in located],
+        "unlocated": unlocated,
+    }
 
 
 @router.post("/navigation/route")
@@ -194,10 +236,12 @@ def feasibility(req: RouteRequest) -> dict[str, Any]:
     planner = _planner(req)
     try:
         start_xy = planner.to_map_coordinates(req.start, req.coordinates_crs)
-        end_xy = planner.to_map_coordinates(req.destination, req.coordinates_crs)
+        end_xy = planner.to_map_coordinates(
+            req.destination, req.coordinates_crs)
         start_cell = planner.coordinate_to_cell(*start_xy)
         end_cell = planner.coordinate_to_cell(*end_xy)
-        path = planner.find_path(req.start, req.destination, "shortest", input_crs=req.coordinates_crs)
+        path = planner.find_path(
+            req.start, req.destination, "shortest", input_crs=req.coordinates_crs)
         return {
             "feasible": True, "start_cell": list(start_cell), "destination_cell": list(end_cell),
             "path_cells": len(path), "excluded_cells": planner.excluded_counts,
@@ -211,19 +255,5 @@ def feasibility(req: RouteRequest) -> dict[str, Any]:
 # aliases on that prefix while retaining the standalone route paths requested
 # for this service. Both prefixes call the same handlers and schemas.
 app = FastAPI(title="MarsWalk Navigation API", version="1.0.0")
-cors_origins = [
-    origin.strip()
-    for origin in os.environ.get(
-        "MARSWALK_CORS_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173",
-    ).split(",")
-    if origin.strip()
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Accept", "Content-Type"],
-)
 app.include_router(router)
 app.include_router(router, prefix="/api")

@@ -8,12 +8,11 @@ from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
-from pyproj import CRS as PyprojCRS, Transformer
 from rasterio.features import rasterize
 from rasterio.warp import transform, transform_geom
 
-from science_adapter import ScienceTarget, science_interest_grid, target_contributions
-from terrain_adapter import TerrainLayers
+from .science_adapter import ScienceTarget, science_interest_grid, target_contributions
+from .terrain_adapter import TerrainLayers
 
 
 class RouteError(ValueError):
@@ -174,13 +173,12 @@ class MarsRoutePlanner:
 
     def cell_to_mars_geographic(self, row: int, col: int) -> list[float]:
         x, y = self.cell_to_coordinate(row, col)
+        geodetic = self.crs.geodetic_crs
         try:
-            projected = PyprojCRS.from_wkt(self.crs.to_wkt())
-            geodetic = projected.geodetic_crs
-            lon, lat = Transformer.from_crs(projected, geodetic, always_xy=True).transform(x, y)
+            lon, lat = transform(self.crs, geodetic, [x], [y])
         except Exception as exc:
             raise RouteError(f"Could not transform route geometry to Mars geographic coordinates: {exc}") from exc
-        return [float(lon), float(lat)]
+        return [float(lon[0]), float(lat[0])]
 
     def heuristic(self, cell: tuple[int, int], goal: tuple[int, int], mode: str) -> float:
         if mode == "science-aware":

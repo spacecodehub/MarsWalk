@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from a_star import MarsRoutePlanner, RouteError
+from .a_star import MarsRoutePlanner, RouteError
 
 
 def compare_routes(

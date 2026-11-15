@@ -12,10 +12,6 @@ dist
 dist-ssr
 *.local
 GIS/raw_data/
-.venv-p4/
-.venv-science/
-__pycache__/
-*.py[cod]
 
 # Editor directories and files
 .vscode/*
@@ -27,3 +23,8 @@ __pycache__/
 *.njsproj
 *.sln
 *.sw?
+
+venv/
+*.db
+.env
+.pytest_cache/
