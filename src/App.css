@@ -725,3 +725,9 @@ body,
 @media (prefers-reduced-motion: reduce) {
   .app-shell.map-open > :not(.mars-keep) { animation: none; }
 }
+
+/* let Mars show behind the route panel and toolbar; the grid stage stays solid */
+.workspace,
+.map-panel {
+  background: transparent !important;
+}
