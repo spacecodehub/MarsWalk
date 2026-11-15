@@ -692,3 +692,42 @@ select {
 }
 
 }
+
+
+/* ---- Mars landing + 3D background ---- */
+:root,
+html,
+body,
+#root,
+.app-shell {
+  background: transparent !important;
+}
+
+.app-shell.map-closed > :not(.mars-keep) { display: none; }
+.app-shell.map-open > :not(.mars-keep) { animation: map-in 0.8s ease both; }
+@keyframes map-in { from { opacity: 0; } to { opacity: 1; } }
+
+.mars-title { margin: 0 0 8px; font-size: clamp(2.4rem, 6vw, 4.5rem); font-weight: 600; letter-spacing: -0.02em; }
+.mars-sub { margin: 0; font-size: 1.1rem; opacity: 0.85; }
+
+.topbar,
+.intro,
+.map-toolbar,
+.side-panel,
+.page-footer {
+  background: rgba(10, 14, 12, 0.35) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+}
+.panel-section { background: transparent !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell.map-open > :not(.mars-keep) { animation: none; }
+}
+
+/* let Mars show behind the route panel and toolbar; the grid stage stays solid */
+.workspace,
+.map-panel {
+  background: transparent !important;
+}
