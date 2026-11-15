@@ -52,7 +52,7 @@ Start the backend from the repository root in one terminal:
 ```powershell
 $env:MARSWALK_TERRAIN_DIR = (Resolve-Path .\GIS\processed\hirise_terrain).Path
 $env:MARSWALK_P6_TARGETS = (Resolve-Path .\data\science\targets\targets.json).Path
-python -m uvicorn api:app --reload --port 8000
+cd backend; python -m uvicorn main:app --reload --port 8000
 ```
 
 Start the frontend in a second terminal:
